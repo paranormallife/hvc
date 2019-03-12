@@ -14,11 +14,12 @@ Text Domain:
 
 @import url('https://fonts.googleapis.com/css?family=Montserrat:400,700|Zilla+Slab:400,400i,700');
 
-* { margin: 0px; padding: 0px; }
+* { box-sizing: border-box; margin: 0px; padding: 0px; }
 
 :root {
     --primary-color: #008B8B;
     --secondary-color: #DAA520;
+    --heading: 'Montserrat', sans-serif;
 }
 
 body, html { height: 100%; }
@@ -67,10 +68,22 @@ h1, h2, h3 {
     text-transform: uppercase;
 }
 
-.menu-icon {
-    display: block;
-    grid-area: nav;
+header {
+    padding: 50px;
     text-align: center;
+}
+
+.menu-icon {
+    align-items: center;
+    background-color: black;
+    border-radius: 50%;
+    color: white;
+    display: inline-flex;
+    height: 2em;
+    justify-content: center;
+    margin: 20px auto;
+    text-align: center;
+    width: 2em;
 }
 
 .menu-icon .close {
@@ -86,13 +99,14 @@ h1, h2, h3 {
 }
 
 ul.mobile-menu {
+    background-color: white;
     display: block;
-    grid-area: mobile-menu;
     list-style-type: none;
-    margin: 25px 0;
+    margin: 0 0 0 -50px;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+    width: 100vw;
 }
 
 ul.mobile-menu.active {
@@ -102,10 +116,14 @@ ul.mobile-menu.active {
 
 ul.mobile-menu li {
     display: block;
-    font-size: 24px;
-    padding: 5px 0;
-    position: relative;
+    font-size: 18px;
+    font-family: var(--heading);
+    padding: 10px 0;
     text-transform: uppercase;
+}
+
+ul.mobile-menu a {
+    color: black;
 }
 
 .menu-item-has-children:after {
