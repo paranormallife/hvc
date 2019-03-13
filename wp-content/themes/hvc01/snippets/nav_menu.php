@@ -34,15 +34,5 @@
 		element.classList.toggle("active");
 		var element = document.getElementById("navIcon");
 		element.classList.toggle("active");
-		var element = document.getElementById("header-search-toggle");
-		element.classList.remove("active");
-		var element = document.getElementById("header-search-field");
-		element.classList.remove("active");
 	}
-
-// Child Menus Toggle
-  jQuery( '.menu-item-has-children' ).on( 'click', function() {
-		jQuery( this ).toggleClass( 'active' );
-  });
-
 </script>

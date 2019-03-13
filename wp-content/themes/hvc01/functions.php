@@ -147,7 +147,7 @@ function asw_save_meta($post_id) {
 
 
 // Register Widget Areas
-function asw_widgets_init() {
+/* function asw_widgets_init() {
 
 	register_sidebar( array(
 		'name'          => 'Header Tagline',
@@ -158,26 +158,8 @@ function asw_widgets_init() {
 		'after_title'   => '',
 	) );
 
-	register_sidebar( array(
-		'name'          => 'Phone Number Button',
-		'id'            => 'header_telephone',
-		'before_widget' => '<div class="header-telephone contact-button">',
-		'after_widget'  => '</div>',
-		'before_title'  => '',
-		'after_title'   => '',
-	) );
-
-	register_sidebar( array(
-		'name'          => 'Email Button',
-		'id'            => 'header_email',
-		'before_widget' => '<div class="header-email contact-button">',
-		'after_widget'  => '</div>',
-		'before_title'  => '',
-		'after_title'   => '',
-	) );
-
 }
-add_action( 'widgets_init', 'asw_widgets_init' );
+add_action( 'widgets_init', 'asw_widgets_init' ); */
 
 function mytheme_setup() {
     // Add support for Block Styles
@@ -212,3 +194,49 @@ function mytheme_setup() {
 add_action( 'after_setup_theme', 'mytheme_setup' );
 
 ?>
+
+<?php
+//Custom Theme Settings
+add_action('admin_menu', 'add_gcf_interface');
+
+function add_gcf_interface() {
+	add_options_page('Global Custom Fields', 'Global Custom Fields', '8', 'functions', 'editglobalcustomfields');
+}
+
+function editglobalcustomfields() {
+	?>
+	<div class='wrap'>
+	<h2>Global Custom Fields</h2>
+	<form method="post" action="options.php">
+	<?php wp_nonce_field('update-options') ?>
+
+	<p><strong>Site Tagline:</strong><br />
+	<input type="text" name="tagline" size="45" value="<?php echo get_option('tagline'); ?>" /></p>
+	
+	<p><strong>Phone Number:</strong><br />
+	<input type="text" name="telephone" size="45" value="<?php echo get_option('telephone'); ?>" /></p>
+
+	<p><strong>Email Address:</strong><br />
+	<input type="text" name="email" size="45" value="<?php echo get_option('email'); ?>" /></p>
+
+	<p><strong>Homepage Call-to-Action:</strong><br />
+	<input type="text" name="home_cta" size="45" value="<?php echo get_option('home_cta'); ?>" /></p>
+
+	<p><strong>Homepage Call-to-Action Link:</strong><br />
+	<input type="text" name="home_cta_link" size="45" value="<?php echo get_option('home_cta_link'); ?>" /></p>
+
+	<p><strong>Map Blurb:</strong><br />
+	<input type="text" name="map_blurb" size="45" value="<?php echo get_option('map_blurb'); ?>" /></p>
+
+	<p><strong>Map Link:</strong><br />
+	<input type="text" name="map_link" size="45" value="<?php echo get_option('map_link'); ?>" /></p>
+
+	<p><input type="submit" name="Submit" value="Update Options" /></p>
+
+	<input type="hidden" name="action" value="update" />
+	<input type="hidden" name="page_options" value="tagline,telephone,email,home_cta,home_cta_link,map_blurb,map_link" />
+
+	</form>
+	</div>
+	<?php
+}

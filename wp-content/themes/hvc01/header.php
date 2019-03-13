@@ -71,8 +71,11 @@
 
 <header>
    <?php get_template_part('snippets/header_logo'); ?>
-   <?php dynamic_sidebar( 'header_tagline' ); ?>
+   <div class="header-tagline">
+      <h2><?php echo get_option('tagline'); ?></h2>
+   </div>
    <?php get_template_part('snippets/nav_menu'); ?>
+   <?php get_template_part('snippets/header_buttons'); ?>
 </header>
 
 <!-- END OF HEADER.PHP -->
