@@ -71,6 +71,7 @@
 
 <header>
    <?php get_template_part('snippets/header_logo'); ?>
+   <?php dynamic_sidebar( 'header_tagline' ); ?>
    <?php get_template_part('snippets/nav_menu'); ?>
 </header>
 

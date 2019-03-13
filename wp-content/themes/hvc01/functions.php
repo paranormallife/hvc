@@ -146,15 +146,34 @@ function asw_save_meta($post_id) {
 }
 
 
+// Register Widget Areas
 function asw_widgets_init() {
 
 	register_sidebar( array(
-		'name'          => 'Home Instagram Feed',
-		'id'            => 'home_instagram',
-		'before_widget' => '<div>',
+		'name'          => 'Header Tagline',
+		'id'            => 'header_tagline',
+		'before_widget' => '<div class="header-tagline">',
 		'after_widget'  => '</div>',
-		'before_title'  => '<h2>',
-		'after_title'   => '</h2>',
+		'before_title'  => '',
+		'after_title'   => '',
+	) );
+
+	register_sidebar( array(
+		'name'          => 'Phone Number Button',
+		'id'            => 'header_telephone',
+		'before_widget' => '<div class="header-telephone contact-button">',
+		'after_widget'  => '</div>',
+		'before_title'  => '',
+		'after_title'   => '',
+	) );
+
+	register_sidebar( array(
+		'name'          => 'Email Button',
+		'id'            => 'header_email',
+		'before_widget' => '<div class="header-email contact-button">',
+		'after_widget'  => '</div>',
+		'before_title'  => '',
+		'after_title'   => '',
 	) );
 
 }
