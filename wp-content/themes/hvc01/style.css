@@ -74,6 +74,12 @@ header {
     text-align: center;
 }
 
+a.header-logo {
+    display: block;
+    margin: 0 auto;
+    max-width: 300px;
+}
+
 .menu-icon {
     align-items: center;
     background-color: black;
@@ -229,7 +235,7 @@ ul.mobile-menu a {
 
 #footer-map {
     align-items: center;
-    background: transparent url('assets/images/hvc-coverage-area.png') center bottom no-repeat;
+    background: transparent url('assets/images/footer-map.png') center center no-repeat;
     background-size: cover;
     display: inline-flex;
     justify-content: center;
@@ -275,4 +281,113 @@ ul.mobile-menu a {
     color: var(--secondary-color);
     display: block;
     margin-top: 5px;
+}
+
+/* Larger Screens ---------------------------------------- */
+
+@media screen and ( min-width: 650px ) {
+
+    body {
+        background: #FBF6E9 url('assets/images/bg-pattern.png') repeat;
+    }
+
+    .menu-icon {
+        display: none;
+    }
+
+    ul.nav-menu {
+        background-color: transparent;
+        margin: 10px 0;
+        max-height: none;
+        width: 100%;
+    }
+
+    ul.nav-menu li {
+        display: inline-block;
+        font-weight: 600;
+        margin: 0 10px;
+    }
+
+    ul.nav-menu a:hover {
+        color: var(--primary-color);
+    }
+
+    #header-buttons {
+        width: 350px;
+    }
+    
+    .header-button .toggle {
+        width: 160px;
+        transition: all 250ms linear 0s;
+    }
+
+    .header-button .toggle:hover {
+        box-shadow: 4px 4px 0 black;
+        transition: all 250ms linear 0s;
+    }
+
+    .header-button.active .toggle:hover {
+        box-shadow: none;
+    }
+
+    .header-button .toggle span {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    #home-cta {
+        background: transparent;
+    }
+
+    #home-cta:before {
+        background: transparent url('assets/images/home-cta.jpg') center center no-repeat;
+        background-size: cover;
+        border-radius: 50%;
+        content: ' ';
+        display: block;
+        height: 300px;
+        margin: 10px auto;
+        width: 300px;
+    }
+
+    #home-cta .blurb {
+        display: block;
+        color: black;
+        margin: 30px auto;
+        max-width: 300px;
+    }
+
+    #home-cta .button a {
+        background-color: var(--secondary-color);
+        font-weight: 600;
+        transition: all 250ms linear 0s;
+    }
+
+    #home-cta .button a:hover {
+        box-shadow: 4px 4px 0 black;
+        transition: all 250ms linear 0s;
+    }
+
+    #footer-map {
+        border-top-left-radius: 300px;
+        border-top-right-radius: 300px;
+        display: flex;
+        margin: 20px auto 0 auto;
+        height: 300px;
+        width: 600px;
+    }
+
+    .footer-menu li {
+        display: inline-block;
+    }
+
+    .footer-menu ul a {
+        font-weight: 600;
+        margin: 10px;
+    }
+
+    .footer-menu ul a:hover {
+        color: white;
+    }
+
 }
