@@ -133,6 +133,10 @@ ul.mobile-menu a {
     color: black;
 }
 
+ul.mobile-menu .current-menu-item a {
+    font-weight: 600;
+}
+
 .menu-item-has-children:after {
     color: rgba(0,0,0,0.25);
     content: "\f107";
@@ -266,6 +270,10 @@ ul.mobile-menu a {
     text-transform: uppercase;
 }
 
+.footer-menu ul .current-menu-item a {
+    color: white;
+}
+
 .footer-copyright {
     background: black;
     color: white;
@@ -282,6 +290,41 @@ ul.mobile-menu a {
     display: block;
     margin-top: 5px;
 }
+
+.page .post-content {
+    display: table;
+    margin: 25px auto;
+    max-width: 800px;
+    width: calc( 100% - 50px );
+}
+
+.post-content h1 {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.post-content p {
+    hyphens: auto;
+    margin-bottom: 1em;
+    text-align: justify;
+}
+
+.shadow img {
+    box-shadow: 3px 3px 0 0px black;
+}
+
+.post-content ul {
+    list-style-type: square;
+    margin: 0 auto 1em auto;
+    max-width: 400px;
+    padding-left: 1.25rem;
+}
+
+.post-content h2 {
+    font-size: 18px;
+    margin: 1em auto;
+}
+
 
 /* Larger Screens ---------------------------------------- */
 
@@ -310,6 +353,10 @@ ul.mobile-menu a {
 
     ul.nav-menu a:hover {
         color: var(--primary-color);
+    }
+
+    ul.nav-menu li.current-menu-item a {
+        border-bottom: 3px solid white;
     }
 
     #header-buttons {

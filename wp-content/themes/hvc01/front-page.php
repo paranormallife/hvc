@@ -9,7 +9,7 @@
             <?php echo get_option('home_cta'); ?>
         </div>
         <div class="button">
-            <a href="<?php echo get_option('home_cta_link'); ?>">Learn More</a>
+            <a href="<?php echo get_bloginfo('wpurl'); ?><?php echo get_option('home_cta_link'); ?>">Learn More</a>
         </div>
     </section>
 </main>
