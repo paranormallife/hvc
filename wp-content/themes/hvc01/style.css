@@ -12,7 +12,7 @@ Text Domain:
 */
 
 
-@import url('https://fonts.googleapis.com/css?family=Montserrat:300,600|Zilla+Slab:300,300i,400');
+@import url('https://fonts.googleapis.com/css?family=Montserrat:300,600|Zilla+Slab:500,500i,700');
 
 * { box-sizing: border-box; margin: 0px; padding: 0px; }
 
@@ -150,11 +150,11 @@ ul.mobile-menu .current-menu-item a {
 
 .header-tagline h2 {
     font-family: var(--copy);
-    font-size: 1em;
+    font-size: 1.25em;
     font-style: italic;
     font-weight: normal;
     margin: 0 auto;
-    max-width: 150px;
+    max-width: 180px;
     text-transform: none;
 }
 
