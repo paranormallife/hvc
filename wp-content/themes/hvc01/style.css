@@ -26,10 +26,18 @@ Text Domain:
 body, html { height: 100%; }
 
 body {
-    background-color: #FBF6E9;
+    background: #FBF6E9;
     font: 300 16px/24px 'Zilla Slab', serif; 
     color: black; 
     margin: 0px;
+}
+
+body:before {
+    background-color: var(--primary-color);
+    content: ' ';
+    display: block;
+    height: 10px;
+    width: 100%;
 }
 
 a {
@@ -330,9 +338,6 @@ ul.mobile-menu .current-menu-item a {
 
 @media screen and ( min-width: 650px ) {
 
-    body {
-        background: #FBF6E9 url('assets/images/bg-pattern.png') repeat;
-    }
 
     .menu-icon {
         display: none;
