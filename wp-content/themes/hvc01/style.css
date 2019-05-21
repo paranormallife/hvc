@@ -361,7 +361,7 @@ ul.mobile-menu .current-menu-item a {
     }
 
     ul.nav-menu li.current-menu-item a {
-        border-bottom: 3px solid white;
+        border-bottom: 3px solid var(--primary-color);
     }
 
     #header-buttons {
