@@ -3,9 +3,9 @@
 Contributors: lukecarbis, ryankienstra, Stino11, rheinardkorf
 Tags: Gutenberg, Blocks
 Requires at least: 5.0
-Tested up to: 5.1.1
+Tested up to: 5.2.1
 Requires PHP: 5.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl
 
@@ -63,6 +63,12 @@ A: [Here](https://github.com/getblocklab/block-lab/wiki)
 See [Contributing to Block Lab](https://github.com/getblocklab/block-lab/blob/develop/CONTRIBUTING.md).
 
 == Changelog ===
+
+= 1.3.1 - 2019-05-22 =
+
+* New: Support for Gutenberg's built-in Additional CSS Class in your block template, by using the field `className`. [Read more](https://github.com/getblocklab/block-lab/wiki/7.-FAQ)
+* New: The Textarea field now has an option to automatically add paragraph tags and line-breaks
+* Fix: Bug affecting blocks containing Pro fields when there's no active Pro license
 
 = 1.3.0 - 2019-04-30 =
 
