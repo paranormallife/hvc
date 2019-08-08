@@ -3,24 +3,24 @@
 Contributors: lukecarbis, ryankienstra, Stino11, rheinardkorf
 Tags: Gutenberg, Blocks
 Requires at least: 5.0
-Tested up to: 5.2.1
-Requires PHP: 5.4
-Stable tag: 1.3.1
+Tested up to: 5.2
+Requires PHP: 5.6
+Stable tag: 1.3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl
 
-A WordPress Admin interface and a simple templating system for building custom Gutenberg blocks.
+The easy way to build custom blocks for Gutenberg.
 
 == Description ==
 
-With the Gutenberg update, WordPress users will increasingly look for the development of custom blocks to meet their unique needs. Block Lab reduces the development burden of building custom blocks through a simple and familiar WordPress Admin interface and an easy to learn templating system.
+Gutenberg, the new WordPress editor, opens up a whole new world for the way we build pages, posts, and websites with WordPress. Block Lab makes it easy to harness Gutenberg and build custom blocks the way you want them to be built. Whether you want to implement a custom design, deliver unique functionality, or even remove your dependance on other plugins, Block Lab equips you with the tools you need to hit “Publish” sooner.
 
 == Features ==
 
 = A Familiar Experience =
 Work within the WordPress admin with an interface you already know.
 
-= Custom Fields =
+= Block Fields =
 Add from a growing list of available fields to your custom blocks.
 
 = Simple Templating =
@@ -29,16 +29,24 @@ Let the plugin do the heavy lifting so you can use familiar WordPress developmen
 = Developer Friendly Functions =
 Simple to use functions, ready to render and work with the values stored through your custom block fields.
 
+= Connect with Community =
+Join The Lab, our free Block Lab Community on Slack. The Lab is our real-time home for sharing resources, learning, and making connections. [Learn more.](https://getblocklab.com/welcome-to-the-lab/)
+
+= Go Pro =
+Block Lab Pro is coming mid 2019 with power features to take your block building to the next level. [Learn more.](https://getblocklab.com/block-lab-pro)
+
 == Links ==
 * [WordPress.org](https://wordpress.org/plugins/block-lab)
 * [Github](https://github.com/getblocklab/block-lab)
 * [Documentation](https://github.com/getblocklab/block-lab/wiki)
 * [Support](https://wordpress.org/support/plugin/block-lab)
+* [Block Lab Pro](https://getblocklab.com/block-lab-pro)
 
 == Installation ==
 = From Within WordPress =
 * Visit Plugins > Add New
 * Search for "Block Lab"
+* Install the Block Lab plugin
 * Activate Block Lab from your Plugins page.
 
 = Manually =
@@ -63,6 +71,32 @@ A: [Here](https://github.com/getblocklab/block-lab/wiki)
 See [Contributing to Block Lab](https://github.com/getblocklab/block-lab/blob/develop/CONTRIBUTING.md).
 
 == Changelog ===
+
+= 1.3.4 - 2019-07-22 =
+
+* New: Block Lab grew to level 1.3.4. Block Lab learned **Custom Categories**.
+* Tweak: **@phpbits** used Pull Request. All right! The **`block_lab_get_block_attributes`** filter was caught!
+* Tweak: **Template Loader** used Harden. **Template Loader**'s defense rose!
+* Tweak: Booted up a TM! It contained **Unit Tests**!
+* Fix: Wild **Missing Filter in Inspector Controls** bug appeared! Go! Bugfix!
+* Fix: Enemy **Mixed Up Inspector Controls** fainted! @kienstra gained 0902a06 EXP. Points!
+
+= 1.3.3 - 2019-06-21 =
+
+* Fix: The previous release broke the `className` field, used for the Additional CSS Class setting. This fixes it.
+
+= 1.3.2 - 2019-06-21 =
+
+* New: Rich Text Control (for Block Lab Pro users)!
+* New: Show Block Category in the list table
+* New: We've got a new `block_lab_render_template` hook which fires before rendering a block on the front end. Great for enqueuing JS
+* Tweak: Updated logo
+* Tweak: Prevent block field slugs from changing when you edit the field title
+* Fix: Saving your license key no longer results in an error page
+* Fix: License details screen showing the wrong information
+* Fix: Remove duplicate IDs on the edit block screen
+* Fix: Range sliders can now set a minimum value of zero
+* Fix: A console warning about unique props
 
 = 1.3.1 - 2019-05-22 =
 
