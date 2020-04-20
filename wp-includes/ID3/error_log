@@ -1,0 +1,1 @@
+[07-Feb-2020 00:37:19 UTC] PHP Fatal error:  Class 'getid3_handler' not found in /home6/paranou1/public_html/hvc/wp-includes/ID3/module.audio.ac3.php on line 18

@@ -3,7 +3,7 @@
  * Number control.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -45,9 +45,10 @@ class Number extends Control_Abstract {
 	 */
 	public function register_settings() {
 		$this->settings[] = new Control_Setting( $this->settings_config['location'] );
+		$this->settings[] = new Control_Setting( $this->settings_config['width'] );
 		$this->settings[] = new Control_Setting( $this->settings_config['help'] );
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'default',
 				'label'    => __( 'Default Value', 'block-lab' ),
 				'type'     => 'number',
@@ -55,7 +56,7 @@ class Number extends Control_Abstract {
 				'sanitize' => function ( $value ) {
 					return filter_var( $value, FILTER_SANITIZE_NUMBER_INT );
 				},
-			)
+			]
 		);
 		$this->settings[] = new Control_Setting( $this->settings_config['placeholder'] );
 	}

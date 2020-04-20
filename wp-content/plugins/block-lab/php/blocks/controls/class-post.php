@@ -3,7 +3,7 @@
  * Post control.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2019, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -43,15 +43,16 @@ class Post extends Control_Abstract {
 	 */
 	public function register_settings() {
 		$this->settings[] = new Control_Setting( $this->settings_config['location'] );
+		$this->settings[] = new Control_Setting( $this->settings_config['width'] );
 		$this->settings[] = new Control_Setting( $this->settings_config['help'] );
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'post_type_rest_slug',
 				'label'    => __( 'Post Type', 'block-lab' ),
 				'type'     => 'post_type_rest_slug',
 				'default'  => 'posts',
-				'sanitize' => array( $this, 'sanitize_post_type_rest_slug' ),
-			)
+				'sanitize' => [ $this, 'sanitize_post_type_rest_slug' ],
+			]
 		);
 	}
 
@@ -80,8 +81,8 @@ class Post extends Control_Abstract {
 	 * }
 	 */
 	public function get_post_type_rest_slugs() {
-		$post_type_rest_slugs = array();
-		foreach ( get_post_types( array( 'public' => true ) ) as $post_type ) {
+		$post_type_rest_slugs = [];
+		foreach ( get_post_types( [ 'public' => true ] ) as $post_type ) {
 			$post_type_object = get_post_type_object( $post_type );
 			if ( ! $post_type_object || empty( $post_type_object->show_in_rest ) ) {
 				continue;

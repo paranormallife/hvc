@@ -3,7 +3,7 @@
  * Rich Text control.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2019, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -22,7 +22,7 @@ class Rich_Text extends Control_Abstract {
 	public $name = 'rich_text';
 
 	/**
-	 * Textarea constructor.
+	 * Class constructor.
 	 *
 	 * @return void
 	 */
@@ -37,7 +37,7 @@ class Rich_Text extends Control_Abstract {
 	 * @return void
 	 */
 	public function register_settings() {
-		foreach ( array( 'help', 'default', 'placeholder' ) as $setting ) {
+		foreach ( [ 'help', 'default', 'placeholder' ] as $setting ) {
 			$this->settings[] = new Control_Setting( $this->settings_config[ $setting ] );
 		}
 	}
@@ -51,6 +51,12 @@ class Rich_Text extends Control_Abstract {
 	 */
 	public function validate( $value, $echo ) {
 		unset( $echo );
+
+		// If there's no text entered, Rich Text saves '<p></p>', so instead return ''.
+		if ( '<p></p>' === $value ) {
+			return '';
+		}
+
 		return wpautop( $value );
 	}
 }

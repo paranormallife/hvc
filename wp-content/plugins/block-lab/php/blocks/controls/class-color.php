@@ -3,7 +3,7 @@
  * Color control.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -37,7 +37,7 @@ class Color extends Control_Abstract {
 	 * @return void
 	 */
 	public function register_settings() {
-		foreach ( array( 'location', 'help', 'default' ) as $setting ) {
+		foreach ( [ 'location', 'width', 'help', 'default' ] as $setting ) {
 			$this->settings[] = new Control_Setting( $this->settings_config[ $setting ] );
 		}
 	}

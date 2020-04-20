@@ -3,7 +3,7 @@
  * Control_Setting.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -77,7 +77,7 @@ class Control_Setting {
 	 *
 	 * @return void
 	 */
-	public function __construct( $args = array() ) {
+	public function __construct( $args = [] ) {
 		if ( isset( $args['name'] ) ) {
 			$this->name = $args['name'];
 		}

@@ -3,7 +3,7 @@
  * Range control.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -45,42 +45,43 @@ class Range extends Control_Abstract {
 	 */
 	public function register_settings() {
 		$this->settings[] = new Control_Setting( $this->settings_config['location'] );
+		$this->settings[] = new Control_Setting( $this->settings_config['width'] );
 		$this->settings[] = new Control_Setting( $this->settings_config['help'] );
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'min',
 				'label'    => __( 'Minimum Value', 'block-lab' ),
 				'type'     => 'number',
 				'default'  => '',
-				'sanitize' => array( $this, 'sanitize_number' ),
-			)
+				'sanitize' => [ $this, 'sanitize_number' ],
+			]
 		);
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'max',
 				'label'    => __( 'Maximum Value', 'block-lab' ),
 				'type'     => 'number',
 				'default'  => '',
-				'sanitize' => array( $this, 'sanitize_number' ),
-			)
+				'sanitize' => [ $this, 'sanitize_number' ],
+			]
 		);
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'step',
 				'label'    => __( 'Step Size', 'block-lab' ),
 				'type'     => 'number_non_negative',
 				'default'  => 1,
-				'sanitize' => array( $this, 'sanitize_number' ),
-			)
+				'sanitize' => [ $this, 'sanitize_number' ],
+			]
 		);
 		$this->settings[] = new Control_Setting(
-			array(
+			[
 				'name'     => 'default',
 				'label'    => __( 'Default Value', 'block-lab' ),
 				'type'     => 'number',
 				'default'  => '',
-				'sanitize' => array( $this, 'sanitize_number' ),
-			)
+				'sanitize' => [ $this, 'sanitize_number' ],
+			]
 		);
 	}
 }

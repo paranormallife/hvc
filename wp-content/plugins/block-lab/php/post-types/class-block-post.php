@@ -3,7 +3,7 @@
  * Block Post Type.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -24,26 +24,35 @@ class Block_Post extends Component_Abstract {
 	 *
 	 * @var string
 	 */
-	public $slug = 'block_lab';
+	public $slug;
 
 	/**
 	 * Registered controls.
 	 *
 	 * @var Controls\Control_Abstract[]
 	 */
-	public $controls = array();
+	public $controls = [];
 
 	/**
 	 * The pro controls.
 	 *
 	 * @var array
 	 */
-	public $pro_controls = array(
+	public $pro_controls = [
+		'repeater',
 		'post',
 		'rich_text',
+		'classic_text',
 		'taxonomy',
 		'user',
-	);
+	];
+
+	/**
+	 * Block Post constructor.
+	 */
+	public function __construct() {
+		$this->slug = block_lab()->get_post_type_slug();
+	}
 
 	/**
 	 * Register any hooks that this component needs.
@@ -51,29 +60,31 @@ class Block_Post extends Component_Abstract {
 	 * @return void
 	 */
 	public function register_hooks() {
-		add_action( 'init', array( $this, 'register_post_type' ) );
-		add_action( 'admin_init', array( $this, 'add_caps' ) );
-		add_action( 'admin_init', array( $this, 'row_export' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
-		add_action( 'add_meta_boxes', array( $this, 'remove_meta_boxes' ) );
-		add_action( 'edit_form_before_permalink', array( $this, 'template_location' ) );
-		add_action( 'post_submitbox_start', array( $this, 'save_draft_button' ) );
-		add_filter( 'enter_title_here', array( $this, 'post_title_placeholder' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'wp_insert_post_data', array( $this, 'save_block' ), 10, 2 );
-		add_action( 'init', array( $this, 'register_controls' ) );
-		add_filter( 'block_lab_field_value', array( $this, 'get_field_value' ), 10, 3 );
+		add_action( 'init', [ $this, 'register_post_type' ] );
+		add_action( 'admin_init', [ $this, 'add_caps' ] );
+		add_action( 'admin_init', [ $this, 'row_export' ] );
+		add_action( 'add_meta_boxes', [ $this, 'add_meta_boxes' ] );
+		add_action( 'add_meta_boxes', [ $this, 'remove_meta_boxes' ] );
+		add_action( 'edit_form_before_permalink', [ $this, 'template_location' ] );
+		add_action( 'post_submitbox_start', [ $this, 'save_draft_button' ] );
+		add_filter( 'enter_title_here', [ $this, 'post_title_placeholder' ] );
+		add_action( 'post_submitbox_misc_actions', [ $this, 'post_type_condition' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		add_action( 'wp_insert_post_data', [ $this, 'save_block' ], 10, 2 );
+		add_action( 'init', [ $this, 'register_controls' ] );
+		add_filter( 'block_lab_field_value', [ $this, 'get_field_value' ], 10, 3 );
+		add_filter( 'block_lab_sub_field_value', [ $this, 'get_field_value' ], 10, 3 );
 
 		// Clean up the list table.
 		add_filter( 'disable_months_dropdown', '__return_true', 10, $this->slug );
-		add_filter( 'page_row_actions', array( $this, 'page_row_actions' ), 10, 1 );
-		add_filter( 'bulk_actions-edit-' . $this->slug, array( $this, 'bulk_actions' ) );
-		add_filter( 'handle_bulk_actions-edit-' . $this->slug, array( $this, 'bulk_export' ), 10, 3 );
-		add_filter( 'manage_edit-' . $this->slug . '_columns', array( $this, 'list_table_columns' ) );
-		add_action( 'manage_' . $this->slug . '_posts_custom_column', array( $this, 'list_table_content' ), 10, 2 );
+		add_filter( 'page_row_actions', [ $this, 'page_row_actions' ], 10, 1 );
+		add_filter( 'bulk_actions-edit-' . $this->slug, [ $this, 'bulk_actions' ] );
+		add_filter( 'handle_bulk_actions-edit-' . $this->slug, [ $this, 'bulk_export' ], 10, 3 );
+		add_filter( 'manage_edit-' . $this->slug . '_columns', [ $this, 'list_table_columns' ] );
+		add_action( 'manage_' . $this->slug . '_posts_custom_column', [ $this, 'list_table_content' ], 10, 2 );
 
 		// AJAX Handlers.
-		add_action( 'wp_ajax_fetch_field_settings', array( $this, 'ajax_field_settings' ) );
+		add_action( 'wp_ajax_fetch_field_settings', [ $this, 'ajax_field_settings' ] );
 	}
 
 	/**
@@ -82,7 +93,7 @@ class Block_Post extends Component_Abstract {
 	 * @return void
 	 */
 	public function register_controls() {
-		$control_names = array(
+		$control_names = [
 			'text',
 			'textarea',
 			'url',
@@ -96,7 +107,7 @@ class Block_Post extends Component_Abstract {
 			'range',
 			'checkbox',
 			'radio',
-		);
+		];
 
 		if ( block_lab()->is_pro() ) {
 			$control_names = array_merge( $control_names, $this->pro_controls );
@@ -155,11 +166,11 @@ class Block_Post extends Component_Abstract {
 	 */
 	public function get_field_value( $value, $control, $echo ) {
 		if ( isset( $this->controls[ $control ] ) && method_exists( $this->controls[ $control ], 'validate' ) ) {
-			return call_user_func( array( $this->controls[ $control ], 'validate' ), $value, $echo );
+			return call_user_func( [ $this->controls[ $control ], 'validate' ], $value, $echo );
 		} elseif ( in_array( $control, $this->pro_controls, true ) && ! block_lab()->is_pro() ) {
 			$pro_control = $this->get_control( $control );
 			if ( method_exists( $pro_control, 'validate' ) ) {
-				return call_user_func( array( $pro_control, 'validate' ), $value, $echo );
+				return call_user_func( [ $pro_control, 'validate' ], $value, $echo );
 			}
 		}
 
@@ -172,7 +183,7 @@ class Block_Post extends Component_Abstract {
 	 * @return void
 	 */
 	public function register_post_type() {
-		$labels = array(
+		$labels = [
 			'name'               => _x( 'Content Blocks', 'post type general name', 'block-lab' ),
 			'singular_name'      => _x( 'Content Block', 'post type singular name', 'block-lab' ),
 			'menu_name'          => _x( 'Block Lab', 'admin menu', 'block-lab' ),
@@ -187,37 +198,24 @@ class Block_Post extends Component_Abstract {
 			'parent_item_colon'  => __( 'Parent Blocks:', 'block-lab' ),
 			'not_found'          => __( 'No blocks found.', 'block-lab' ),
 			'not_found_in_trash' => __( 'No blocks found in Trash.', 'block-lab' ),
-		);
+		];
 
-		$args = array(
+		$args = [
 			'labels'        => $labels,
 			'public'        => false,
 			'show_ui'       => true,
 			'show_in_menu'  => true,
 			'menu_position' => 100,
-			// This SVG icon is being included from the plugin directory, so using file_get_contents is okay.
-			// @codingStandardsIgnoreStart
-			'menu_icon'     => 'data:image/svg+xml;base64,' . base64_encode(
-				file_get_contents(
-					$this->plugin->get_assets_path( 'images/admin-menu-icon.svg' )
-				)
+			'menu_icon'     => 'data:image/svg+xml;base64,' . base64_encode( // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+				file_get_contents( $this->plugin->get_assets_path( 'images/admin-menu-icon.svg' ) ) // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- This SVG icon is being included from the plugin directory, so using file_get_contents is okay.
 			),
-			// @codingStandardsIgnoreEnd
 			'query_var'     => true,
-			'rewrite'       => array( 'slug' => $this->slug ),
+			'rewrite'       => [ 'slug' => $this->slug ],
 			'hierarchical'  => true,
-			'capabilities'  => array(
-				'edit_post'          => 'block_lab_edit_block',
-				'edit_posts'         => 'block_lab_edit_blocks',
-				'edit_others_posts'  => 'block_lab_edit_others_blocks',
-				'publish_posts'      => 'block_lab_publish_blocks',
-				'read_post'          => 'block_lab_read_block',
-				'read_private_posts' => 'block_lab_read_private_blocks',
-				'delete_post'        => 'block_lab_delete_block',
-			),
+			'capabilities'  => $this->get_capabilities(),
 			'map_meta_cap'  => true,
-			'supports'      => array( 'title' ),
-		);
+			'supports'      => [ 'title' ],
+		];
 
 		register_post_type( $this->slug, $args );
 	}
@@ -228,15 +226,31 @@ class Block_Post extends Component_Abstract {
 	 * @return void
 	 */
 	public function add_caps() {
-		$admins = get_role( 'administrator' );
+		$admin = get_role( 'administrator' );
+		if ( ! $admin ) {
+			return;
+		}
 
-		$admins->add_cap( 'block_lab_edit_block' );
-		$admins->add_cap( 'block_lab_edit_blocks' );
-		$admins->add_cap( 'block_lab_edit_others_blocks' );
-		$admins->add_cap( 'block_lab_publish_blocks' );
-		$admins->add_cap( 'block_lab_read_block' );
-		$admins->add_cap( 'block_lab_read_private_blocks' );
-		$admins->add_cap( 'block_lab_delete_block' );
+		foreach ( $this->get_capabilities() as $capability => $custom_capability ) {
+			$admin->add_cap( $custom_capability );
+		}
+	}
+
+	/**
+	 * Gets the mapping of capabilities for the custom post type.
+	 *
+	 * @return array An associative array of capability key => custom capability value.
+	 */
+	public function get_capabilities() {
+		return [
+			'edit_post'          => 'block_lab_edit_block',
+			'edit_posts'         => 'block_lab_edit_blocks',
+			'edit_others_posts'  => 'block_lab_edit_others_blocks',
+			'publish_posts'      => 'block_lab_publish_blocks',
+			'read_post'          => 'block_lab_read_block',
+			'read_private_posts' => 'block_lab_read_private_blocks',
+			'delete_post'        => 'block_lab_delete_block',
+		];
 	}
 
 	/**
@@ -257,18 +271,18 @@ class Block_Post extends Component_Abstract {
 			wp_enqueue_style(
 				'block-post',
 				$this->plugin->get_url( 'css/admin.block-post.css' ),
-				array(),
+				[],
 				$this->plugin->get_version()
 			);
 
-			if ( ! in_array( $post->post_status, array( 'publish', 'future', 'pending' ), true ) ) {
+			if ( ! in_array( $post->post_status, [ 'publish', 'future', 'pending' ], true ) ) {
 				wp_add_inline_style( 'block-post', '#delete-action { display: none; }' );
 			}
 
 			wp_enqueue_script(
 				'block-post',
 				$this->plugin->get_url( 'js/admin.block-post.js' ),
-				array( 'jquery', 'jquery-ui-sortable', 'wp-util', 'wp-blocks' ),
+				[ 'jquery', 'jquery-ui-sortable', 'wp-util', 'wp-blocks' ],
 				$this->plugin->get_version(),
 				false
 			);
@@ -276,15 +290,19 @@ class Block_Post extends Component_Abstract {
 			wp_localize_script(
 				'block-post',
 				'blockLab',
-				array(
+				[
 					'fieldSettingsNonce' => wp_create_nonce( 'block_lab_field_settings_nonce' ),
+					'postTypes'          => [
+						'all'  => __( 'All', 'block-lab' ),
+						'none' => __( 'None', 'block-lab' ),
+					],
 					'copySuccessMessage' => __( 'Copied to clipboard.', 'block-lab' ),
 					'copyFailMessage'    => sprintf(
 						// translators: Placeholder is a shortcut key combination.
 						__( '%1$s to copy.', 'block-lab' ),
 						strpos( getenv( 'HTTP_USER_AGENT' ), 'Mac' ) ? 'Cmd+C' : 'Ctrl+C'
 					),
-				)
+				]
 			);
 		}
 
@@ -292,7 +310,7 @@ class Block_Post extends Component_Abstract {
 			wp_enqueue_style(
 				'block-edit',
 				$this->plugin->get_url( 'css/admin.block-edit.css' ),
-				array(),
+				[],
 				$this->plugin->get_version()
 			);
 		}
@@ -309,7 +327,7 @@ class Block_Post extends Component_Abstract {
 		add_meta_box(
 			'block_properties',
 			__( 'Block Properties', 'block-lab' ),
-			array( $this, 'render_properties_meta_box' ),
+			[ $this, 'render_properties_meta_box' ],
 			$this->slug,
 			'side',
 			'default'
@@ -318,20 +336,21 @@ class Block_Post extends Component_Abstract {
 		add_meta_box(
 			'block_fields',
 			__( 'Block Fields', 'block-lab' ),
-			array( $this, 'render_fields_meta_box' ),
+			[ $this, 'render_fields_meta_box' ],
 			$this->slug,
 			'normal',
 			'default'
 		);
 
-		if ( isset( $post->post_name ) && ! empty( $post->post_name ) ) {
-			$template = block_lab_locate_template( 'blocks/block-' . $post->post_name . '.php', '', true );
+		if ( ! empty( $post->post_name ) ) {
+			$locations = block_lab()->get_template_locations( $post->post_name );
+			$template  = block_lab()->locate_template( $locations, '', true );
 
 			if ( ! $template ) {
 				add_meta_box(
 					'block_template',
 					__( 'Template', 'block-lab' ),
-					array( $this, 'render_template_meta_box' ),
+					[ $this, 'render_template_meta_box' ],
 					$this->slug,
 					'normal',
 					'high'
@@ -368,7 +387,7 @@ class Block_Post extends Component_Abstract {
 			return;
 		}
 
-		if ( ! in_array( $post->post_status, array( 'publish', 'future', 'pending' ), true ) ) {
+		if ( ! in_array( $post->post_status, [ 'publish', 'future', 'pending' ], true ) ) {
 			?>
 			<input type="submit" name="save" value="<?php esc_attr_e( 'Save Draft', 'block-lab' ); ?>" class="button" />
 			<?php
@@ -383,7 +402,7 @@ class Block_Post extends Component_Abstract {
 	public function render_properties_meta_box() {
 		$post  = get_post();
 		$block = new Block( $post->ID );
-		$icons = block_lab_get_icons();
+		$icons = block_lab()->get_icons();
 
 		if ( ! $block->icon ) {
 			$block->icon = 'block_lab';
@@ -419,7 +438,7 @@ class Block_Post extends Component_Abstract {
 			<span id="block-properties-icon-current">
 				<?php
 				if ( array_key_exists( $block->icon, $icons ) ) {
-					echo wp_kses( $icons[ $block->icon ], block_lab_allowed_svg_tags() );
+					echo wp_kses( $icons[ $block->icon ], block_lab()->allowed_svg_tags() );
 				}
 				?>
 			</span>
@@ -437,7 +456,7 @@ class Block_Post extends Component_Abstract {
 						'<span class="icon %1$s" data-value="%2$s">%3$s</span>',
 						esc_attr( $selected ),
 						esc_attr( $icon ),
-						wp_kses( $svg, block_lab_allowed_svg_tags() )
+						wp_kses( $svg, block_lab()->allowed_svg_tags() )
 					);
 				}
 				?>
@@ -502,6 +521,7 @@ class Block_Post extends Component_Abstract {
 	public function render_fields_meta_box() {
 		$post  = get_post();
 		$block = new Block( $post->ID );
+		do_action( 'block_lab_before_fields_list' );
 		?>
 		<div class="block-fields-list">
 			<table class="widefat">
@@ -521,19 +541,10 @@ class Block_Post extends Component_Abstract {
 				</thead>
 				<tbody>
 					<tr>
-						<td colspan="5">
+						<td colspan="4">
 							<div class="block-fields-rows">
 								<p class="block-no-fields">
-									<?php
-									echo wp_kses_post(
-										sprintf(
-											// Translators: Placeholders are for <strong> HTML tags.
-											__( 'Click the %1$s+ Add Field%2$s button below to add your first field.' ),
-											'<strong>',
-											'</strong>'
-										)
-									);
-									?>
+									<?php echo wp_kses_post( __( 'Click <strong>Add Field</strong> below to add your first field.', 'block-lab' ) ); ?>
 								</p>
 								<?php
 								if ( count( $block->fields ) > 0 ) {
@@ -549,90 +560,98 @@ class Block_Post extends Component_Abstract {
 			</table>
 		</div>
 		<div class="block-fields-actions-add-field">
-			<input
-				name="add-field"
-				type="button"
-				class="button button-primary button-large"
-				id="block-add-field"
-				value="<?php esc_attr_e( '+ Add Field', 'block-lab' ); ?>" />
-
+			<button type="button" aria-label="Add Field" class="block-fields-action" id="block-add-field">
+				<span class="dashicons dashicons-plus"></span>
+				<?php esc_attr_e( 'Add Field', 'block-lab' ); ?>
+			</button>
 			<script type="text/html" id="tmpl-field-repeater">
 				<?php
-				$args = array(
+				$args = [
 					'name'  => 'new-field',
 					'label' => __( 'New Field', 'block-lab' ),
-				);
+				];
 				$this->render_fields_meta_box_row( new Field( $args ) );
 				?>
 			</script>
+			<script type="text/html" id="tmpl-sub-field-rows">
+				<?php $this->render_fields_sub_rows(); ?>
+			</script>
 		</div>
 		<?php
+		do_action( 'block_lab_after_fields_list' );
 		wp_nonce_field( 'block_lab_save_fields', 'block_lab_fields_nonce' );
 	}
 
 	/**
 	 * Render a single Field as a row.
 	 *
-	 * @param Field $field The Field containing the options to render.
-	 * @param mixed $uid   A unique ID to used to unify the HTML name, for, and id attributes.
+	 * @param Field $field      The Field containing the options to render.
+	 * @param mixed $uid        A unique ID to used to unify the HTML name, for, and id attributes.
+	 * @param mixed $parent_uid The parent's unique ID, if the field has a parent.
 	 *
 	 * @return void
 	 */
-	public function render_fields_meta_box_row( $field, $uid = false ) {
+	public function render_fields_meta_box_row( $field, $uid = false, $parent_uid = false ) {
 		// Use a template placeholder if no UID provided.
 		if ( ! $uid ) {
 			$uid = '{{ data.uid }}';
 		}
-		$is_field_disabled = ( ! isset( $this->controls[ $field->control ] ) && in_array( $field->control, $this->pro_controls, true ) );
 
+		$is_field_disabled = ( ! isset( $this->controls[ $field->control ] ) && in_array( $field->control, $this->pro_controls, true ) );
 		?>
 		<div class="block-fields-row" data-uid="<?php echo esc_attr( $uid ); ?>">
-			<div class="block-fields-sort">
-				<span class="block-fields-sort-handle"></span>
-			</div>
-			<div class="block-fields-label">
-				<a class="row-title" href="javascript:" id="block-fields-label_<?php echo esc_attr( $uid ); ?>">
-					<?php echo esc_html( $field->label ); ?>
-				</a>
-				<div class="block-fields-actions">
-					<a class="block-fields-actions-edit" href="javascript:">
-						<?php esc_html_e( 'Edit', 'block-lab' ); ?>
-					</a>
-					&nbsp;|&nbsp;
-					<a class="block-fields-actions-delete" href="javascript:">
-						<?php esc_html_e( 'Delete', 'block-lab' ); ?>
-					</a>
+			<div class="block-fields-row-columns">
+				<div class="block-fields-sort">
+					<span class="block-fields-sort-handle"></span>
 				</div>
-			</div>
-			<div class="block-fields-name" id="block-fields-name_<?php echo esc_attr( $uid ); ?>">
-				<code id="block-fields-name-code_<?php echo esc_attr( $uid ); ?>"><?php echo esc_html( $field->name ); ?></code>
-			</div>
-			<div class="block-fields-control" id="block-fields-control_<?php echo esc_attr( $uid ); ?>">
-				<?php
-				if ( ! $is_field_disabled && isset( $this->controls[ $field->control ] ) ) :
-					echo esc_html( $this->controls[ $field->control ]->label );
-				else :
-					?>
-					<span class="dashicons dashicons-warning"></span>
-					<span class="pro-required">
-						<?php
-						/* translators: %1$s is the field type, %2$s is the URL for the Pro license */
-						printf(
-							wp_kses_post( 'This <code>%1$s</code> field requires an active <a href="%2$s">pro license</a>.', 'block-lab' ),
-							esc_html( $field->control ),
-							esc_url(
-								add_query_arg(
-									array(
-										'post_type' => 'block_lab',
-										'page'      => 'block-lab-pro',
-									),
-									admin_url( 'edit.php' )
-								)
-							)
-						);
+				<div class="block-fields-label">
+					<a class="row-title" href="javascript:" id="block-fields-label_<?php echo esc_attr( $uid ); ?>">
+						<?php echo esc_html( $field->label ); ?>
+					</a>
+					<div class="block-fields-actions">
+						<a class="block-fields-actions-edit" href="javascript:">
+							<?php esc_html_e( 'Edit', 'block-lab' ); ?>
+						</a>
+						&nbsp;|&nbsp;
+						<a class="block-fields-actions-duplicate" href="javascript:">
+							<?php esc_html_e( 'Duplicate', 'block-lab' ); ?>
+						</a>
+						&nbsp;|&nbsp;
+						<a class="block-fields-actions-delete" href="javascript:">
+							<?php esc_html_e( 'Delete', 'block-lab' ); ?>
+						</a>
+					</div>
+				</div>
+				<div class="block-fields-name" id="block-fields-name_<?php echo esc_attr( $uid ); ?>">
+					<code id="block-fields-name-code_<?php echo esc_attr( $uid ); ?>"><?php echo esc_html( $field->name ); ?></code>
+				</div>
+				<div class="block-fields-control" id="block-fields-control_<?php echo esc_attr( $uid ); ?>">
+					<?php
+					if ( ! $is_field_disabled && isset( $this->controls[ $field->control ] ) ) :
+						echo esc_html( $this->controls[ $field->control ]->label );
+					else :
 						?>
-					</span>
-				<?php endif; ?>
+						<span class="dashicons dashicons-warning"></span>
+						<span class="pro-required">
+							<?php
+							/* translators: %1$s is the field type, %2$s is the URL for the Pro license */
+							printf(
+								wp_kses_post( 'This <code>%1$s</code> field requires an active <a href="%2$s">pro license</a>.', 'block-lab' ),
+								esc_html( $field->control ),
+								esc_url(
+									add_query_arg(
+										[
+											'post_type' => 'block_lab',
+											'page'      => 'block-lab-pro',
+										],
+										admin_url( 'edit.php' )
+									)
+								)
+							);
+							?>
+						</span>
+					<?php endif; ?>
+				</div>
 			</div>
 			<div class="block-fields-edit">
 				<table class="widefat">
@@ -688,7 +707,8 @@ class Block_Post extends Component_Abstract {
 								class="regular-text"
 								value="<?php echo esc_attr( $field->name ); ?>"
 								data-sync="block-fields-name-code_<?php echo esc_attr( $uid ); ?>"
-								<?php echo $is_field_disabled ? 'readonly="readonly"' : ''; ?> />
+								<?php echo $is_field_disabled ? 'readonly="readonly"' : ''; ?>
+							/>
 						</td>
 					</tr>
 					<tr class="block-fields-edit-control">
@@ -706,10 +726,17 @@ class Block_Post extends Component_Abstract {
 								<?php disabled( $is_field_disabled ); ?> >
 								<?php
 								$controls_for_select = $this->controls;
+
 								// If this field is disabled, it was probably added when there was a valid pro license, so still display it.
 								if ( $is_field_disabled && in_array( $field->control, $this->pro_controls, true ) ) {
 									$controls_for_select[ $field->control ] = $this->get_control( $field->control );
 								}
+
+								// Don't allow nesting repeaters inside repeaters.
+								if ( ! empty( $field->settings['parent'] ) ) {
+									unset( $controls_for_select['repeater'] );
+								}
+
 								foreach ( $controls_for_select as $control_for_select ) :
 									?>
 									<option
@@ -734,6 +761,59 @@ class Block_Post extends Component_Abstract {
 					</tr>
 				</table>
 			</div>
+			<?php
+			if ( 'repeater' === $field->control ) {
+				if ( ! isset( $field->settings['sub_fields'] ) ) {
+					$field->settings['sub_fields'] = [];
+				}
+				$this->render_fields_sub_rows( $field->settings['sub_fields'], $uid );
+			}
+			if ( $parent_uid ) {
+				?>
+				<input
+					type="hidden"
+					name="block-fields-parent[<?php echo esc_attr( $uid ); ?>]"
+					value="<?php echo esc_attr( $parent_uid ); ?>"
+				/>
+				<?php
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the actions row when adding a Repeater field.
+	 *
+	 * @param Field[] $fields     The sub fields to render.
+	 * @param mixed   $parent_uid The unique ID of the field's parent.
+	 *
+	 * @return void
+	 */
+	public function render_fields_sub_rows( $fields = [], $parent_uid = false ) {
+		?>
+		<div class="block-fields-sub-rows">
+			<?php
+			if ( ! empty( $fields ) ) {
+				foreach ( $fields as $field ) {
+					$this->render_fields_meta_box_row( $field, uniqid(), $parent_uid );
+				}
+			}
+			?>
+		</div>
+		<div class="block-fields-sub-rows-actions">
+			<p class="repeater-no-fields <?php echo esc_attr( empty( $fields ) ? '' : 'hidden' ); ?>">
+				<button type="button" aria-label="Add Sub-Field" id="block-add-sub-field">
+					<span class="dashicons dashicons-plus"></span>
+					<?php esc_attr_e( 'Add your first Sub-Field', 'block-lab' ); ?>
+				</button>
+			</p>
+			<p class="repeater-has-fields <?php echo esc_attr( empty( $fields ) ? 'hidden' : '' ); ?>">
+				<button type="button" aria-label="Add Sub-Field" id="block-add-sub-field">
+					<span class="dashicons dashicons-plus"></span>
+					<?php esc_attr_e( 'Add Sub-Field', 'block-lab' ); ?>
+				</button>
+			</p>
 		</div>
 		<?php
 	}
@@ -747,7 +827,7 @@ class Block_Post extends Component_Abstract {
 		$post = get_post();
 		?>
 		<div class="template-notice">
-			<h3><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Next step: Create a block template.', 'block-lab' ); ?></h3>
+			<h3>✔️ <?php esc_html_e( 'Next step: Create a block template.', 'block-lab' ); ?></h3>
 			<p>
 				<?php esc_html_e( 'To display this block, Block Lab will look for this template file in your theme:', 'block-lab' ); ?>
 			</p>
@@ -760,7 +840,7 @@ class Block_Post extends Component_Abstract {
 			$template_breaks = '/' . trailingslashit( implode( '/<wbr>', $template_parts ) );
 			?>
 			<p class="template-location">
-				<span class="path"><?php echo wp_kses( $template_breaks, array( 'wbr' => array() ) ); ?></span>
+				<span class="path"><?php echo wp_kses( $template_breaks, [ 'wbr' => [] ] ); ?></span>
 				<a class="filename" data-tooltip="<?php esc_attr_e( 'Click to copy.', 'block-lab' ); ?>" href="#"><?php echo esc_html( $filename ); ?></a>
 				<span class="click-to-copy">
 					<input type="text" readonly="readonly" value="<?php echo esc_html( $filename ); ?>" />
@@ -772,14 +852,14 @@ class Block_Post extends Component_Abstract {
 				echo wp_kses_post(
 					sprintf(
 						'<a href="%1$s" target="_blank">%2$s</a> | ',
-						'https://github.com/getblocklab/block-lab/wiki/3.-Displaying-custom-blocks',
+						'https://getblocklab.com/docs/get-started/add-a-block-lab-block-to-your-website-content/',
 						esc_html__( 'Block Templates', 'block-lab' )
 					)
 				);
 				echo wp_kses_post(
 					sprintf(
 						'<a href="%1$s" target="_blank">%2$s</a>',
-						'https://github.com/getblocklab/block-lab/wiki/4.-Template-Functions',
+						'https://getblocklab.com/docs/functions/',
 						esc_html__( 'Template Functions', 'block-lab' )
 					)
 				);
@@ -804,7 +884,8 @@ class Block_Post extends Component_Abstract {
 			return;
 		}
 
-		$template = block_lab_locate_template( 'blocks/block-' . $post->post_name . '.php', '', true );
+		$locations = block_lab()->get_template_locations( $post->post_name, 'block' );
+		$template  = block_lab()->locate_template( $locations, '', true );
 
 		if ( ! $template ) {
 			return;
@@ -857,7 +938,12 @@ class Block_Post extends Component_Abstract {
 		$uid     = sanitize_key( $_POST['uid'] );
 
 		ob_start();
-		$field = new Field( array( 'control' => $control ) );
+		$field = new Field( [ 'control' => $control ] );
+
+		if ( isset( $_POST['parent'] ) ) {
+			$field->settings['parent'] = sanitize_key( $_POST['parent'] );
+		}
+
 		$this->render_field_settings( $field, $uid );
 		$data['html'] = ob_get_clean();
 
@@ -888,7 +974,7 @@ class Block_Post extends Component_Abstract {
 		}
 
 		// Exits script if not the right post type.
-		if ( $data['post_type'] !== $this->slug ) {
+		if ( $this->slug !== $data['post_type'] ) {
 			return $data;
 		}
 
@@ -936,6 +1022,16 @@ class Block_Post extends Component_Abstract {
 			$block->title = $post_id;
 		}
 
+		// Block excluded post type.
+		if ( isset( $_POST['block-excluded-post-types'] ) ) {
+			$excluded = sanitize_text_field(
+				wp_unslash( $_POST['block-excluded-post-types'] )
+			);
+			if ( ! empty( $excluded ) ) {
+				$block->excluded = explode( ',', $excluded );
+			}
+		}
+
 		// Block icon.
 		if ( isset( $_POST['block-properties-icon'] ) ) {
 			$block->icon = sanitize_key( $_POST['block-properties-icon'] );
@@ -944,16 +1040,16 @@ class Block_Post extends Component_Abstract {
 		// Block category.
 		if ( isset( $_POST['block-properties-category'] ) ) {
 			$category_slug = sanitize_key( $_POST['block-properties-category'] );
-			$categories    = get_block_categories( the_post() );
+			$categories    = get_block_categories( get_post() );
 
 			if ( '__custom' === $category_slug && isset( $_POST['block-properties-category-name'] ) ) {
-				$category = array(
+				$category = [
 					'slug'  => sanitize_key( $_POST['block-properties-category-name'] ),
 					'title' => sanitize_text_field(
 						wp_unslash( $_POST['block-properties-category-name'] )
 					),
 					'icon'  => null,
-				);
+				];
 			} else {
 				$category_slugs = wp_list_pluck( $categories, 'slug' );
 				$category_key   = array_search( $category_slug, $category_slugs, true );
@@ -981,16 +1077,11 @@ class Block_Post extends Component_Abstract {
 
 		// Block fields.
 		if ( isset( $_POST['block-fields-name'] ) && is_array( $_POST['block-fields-name'] ) ) {
-			$order = 0;
-
 			// We loop through this array and sanitize its content according to the content type.
 			$fields = wp_unslash( $_POST['block-fields-name'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			foreach ( $fields as $key => $name ) {
 				// Field name and order.
-				$field_config = array(
-					'name'  => sanitize_key( $name ),
-					'order' => $order,
-				);
+				$field_config = [ 'name' => sanitize_key( $name ) ];
 
 				// Field label.
 				if ( isset( $_POST['block-fields-label'][ $key ] ) ) {
@@ -1049,14 +1140,48 @@ class Block_Post extends Component_Abstract {
 						}
 
 						$field_config['settings'][ $setting->name ] = $value;
-						$field                                      = new Field( $field_config );
+
+						$field = new Field( $field_config );
 					}
 				} else {
 					$field = new Field( $field_config );
 				}
 
-				$block->fields[ $name ] = $field;
-				$order++;
+				/*
+				 * Sub-Fields
+				 * If there's a "block-fields-parent" input, include the current field in a "sub-fields" field setting
+				 * for the specified parent.
+				 */
+				if ( ! empty( $_POST['block-fields-parent'][ $key ] ) ) {
+					$parent_uid = sanitize_key( $_POST['block-fields-parent'][ $key ] );
+
+					// The parent's name should have been submitted.
+					if ( ! isset( $fields[ $parent_uid ] ) ) {
+						continue;
+					}
+
+					$parent = $fields[ $parent_uid ];
+
+					// The parent field should be set by now. We expect it to always precede the child field.
+					if ( ! isset( $block->fields[ $parent ] ) ) {
+						continue;
+					}
+
+					if ( ! isset( $block->fields[ $parent ]->settings['sub_fields'] ) ) {
+						$block->fields[ $parent ]->settings['sub_fields'] = [];
+					}
+
+					$field->settings['parent'] = $parent;
+					$field->order              = count(
+						$block->fields[ $parent ]->settings['sub_fields']
+					);
+
+					$block->fields[ $parent ]->settings['sub_fields'][ $name ] = $field;
+				} else {
+					$field->order = count( $block->fields );
+
+					$block->fields[ $name ] = $field;
+				}
 			}
 		}
 
@@ -1083,6 +1208,63 @@ class Block_Post extends Component_Abstract {
 	}
 
 	/**
+	 * Displays an option for editing the post type that this block appears on.
+	 */
+	public function post_type_condition() {
+		if ( ! block_lab()->is_pro() ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		// Enqueue scripts and styles on the edit screen of the Block post type.
+		if ( ! is_object( $screen ) || $this->slug !== $screen->post_type ) {
+			return;
+		}
+
+		$post_types = get_post_types(
+			[
+				'show_in_rest' => true,
+				'show_in_menu' => true,
+			],
+			'objects'
+		);
+
+		$post_types = array_filter(
+			$post_types,
+			function( $post_type ) {
+				return post_type_supports( $post_type->name, 'editor' );
+			}
+		);
+
+		$block = new Block( get_the_ID() );
+		?>
+		<div class="block-lab-pub-section hide-if-no-js">
+			<?php esc_html_e( 'Post Types:', 'block-lab' ); ?> <span class="post-types-display"></span>
+			<a href="#post-types-select" class="edit-post-types" role="button">
+				<span aria-hidden="true"><?php esc_html_e( 'Edit', 'block-lab' ); ?></span>
+			</a>
+			<input type="hidden" value="<?php echo esc_attr( implode( ',', $block->excluded ) ); ?>" name="block-excluded-post-types" id="block-excluded-post-types" />
+			<div class="post-types-select">
+				<div class="post-types-select-items">
+					<?php
+					foreach ( $post_types as $post_type ) {
+						?>
+						<input type="checkbox" id="block-post-type-<?php echo esc_attr( $post_type->name ); ?>" value="<?php echo esc_attr( $post_type->name ); ?>">
+						<label for="block-post-type-<?php echo esc_attr( $post_type->name ); ?>"><?php echo esc_html( $post_type->label ); ?></label>
+						<br />
+						<?php
+					}
+					?>
+				</div>
+				<a href="#post-types" class="save-post-types button"><?php esc_html_e( 'OK', 'block-lab' ); ?></a>
+				<a href="#post-types" class="button-cancel"><?php esc_html_e( 'Cancel', 'block-lab' ); ?></a>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Change the columns in the Custom Blocks list table
 	 *
 	 * @param array $columns An array of column name ⇒ label. The name is passed to functions to identify the column.
@@ -1090,14 +1272,14 @@ class Block_Post extends Component_Abstract {
 	 * @return array
 	 */
 	public function list_table_columns( $columns ) {
-		$new_columns = array(
+		$new_columns = [
 			'cb'       => $columns['cb'],
 			'title'    => $columns['title'],
 			'icon'     => __( 'Icon', 'block-lab' ),
 			'template' => __( 'Template', 'block-lab' ),
 			'category' => __( 'Category', 'block-lab' ),
 			'keywords' => __( 'Keywords', 'block-lab' ),
-		);
+		];
 		return $new_columns;
 	}
 
@@ -1112,19 +1294,20 @@ class Block_Post extends Component_Abstract {
 	public function list_table_content( $column, $post_id ) {
 		if ( 'icon' === $column ) {
 			$block = new Block( $post_id );
-			$icons = block_lab_get_icons();
+			$icons = block_lab()->get_icons();
 
 			if ( isset( $icons[ $block->icon ] ) ) {
 				printf(
 					'<span class="icon %1$s">%2$s</span>',
 					esc_attr( $block->icon ),
-					wp_kses( $icons[ $block->icon ], block_lab_allowed_svg_tags() )
+					wp_kses( $icons[ $block->icon ], block_lab()->allowed_svg_tags() )
 				);
 			}
 		}
 		if ( 'template' === $column ) {
-			$block    = new Block( $post_id );
-			$template = block_lab_locate_template( 'blocks/block-' . $block->name . '.php', '', true );
+			$block     = new Block( $post_id );
+			$locations = block_lab()->get_template_locations( $block->name, 'block' );
+			$template  = block_lab()->locate_template( $locations, '', true );
 
 			if ( ! $template ) {
 				esc_html_e( 'No template found.', 'block-lab' );
@@ -1135,10 +1318,10 @@ class Block_Post extends Component_Abstract {
 				$template_breaks = implode( '/', $template_parts );
 				echo wp_kses(
 					'<code>' . $template_breaks . '</code>',
-					array(
-						'code' => array(),
-						'wbr'  => array(),
-					)
+					[
+						'code' => [],
+						'wbr'  => [],
+					]
 				);
 			}
 		}
@@ -1159,11 +1342,11 @@ class Block_Post extends Component_Abstract {
 	 *
 	 * @return array
 	 */
-	public function page_row_actions( $actions = array() ) {
+	public function page_row_actions( $actions = [] ) {
 		$post = get_post();
 
 		// Abort if the post type is incorrect.
-		if ( $post->post_type !== $this->slug ) {
+		if ( $this->slug !== $post->post_type ) {
 			return $actions;
 		}
 
@@ -1174,10 +1357,10 @@ class Block_Post extends Component_Abstract {
 
 		// Add the Export link.
 		if ( block_lab()->is_pro() ) {
-			$export = array(
+			$export = [
 				'export' => sprintf(
 					'<a href="%1$s" aria-label="%2$s">%3$s</a>',
-					add_query_arg( array( 'export' => $post->ID ) ),
+					add_query_arg( [ 'export' => $post->ID ] ),
 					sprintf(
 						// translators: Placeholder is a post title.
 						__( 'Export %1$s', 'block-lab' ),
@@ -1185,7 +1368,7 @@ class Block_Post extends Component_Abstract {
 					),
 					__( 'Export', 'block-lab' )
 				),
-			);
+			];
 
 			$actions = array_merge(
 				array_slice( $actions, 0, 1 ),
@@ -1230,7 +1413,7 @@ class Block_Post extends Component_Abstract {
 			return;
 		}
 
-		$this->export( array( $post_id ) );
+		$this->export( [ $post_id ] );
 	}
 
 	/**
@@ -1263,7 +1446,7 @@ class Block_Post extends Component_Abstract {
 	 * @param int[] $post_ids The post IDs to export.
 	 */
 	private function export( $post_ids ) {
-		$blocks = array();
+		$blocks = [];
 
 		foreach ( $post_ids as $post_id ) {
 			$post = get_post( $post_id );

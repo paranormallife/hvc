@@ -1,11 +1,11 @@
 === Block Lab ===
 
 Contributors: lukecarbis, ryankienstra, Stino11, rheinardkorf
-Tags: Gutenberg, Blocks
+Tags: gutenberg, blocks, block editor, fields, template
 Requires at least: 5.0
-Tested up to: 5.2
+Tested up to: 5.3
 Requires PHP: 5.6
-Stable tag: 1.3.4
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl
 
@@ -13,7 +13,7 @@ The easy way to build custom blocks for Gutenberg.
 
 == Description ==
 
-Gutenberg, the new WordPress editor, opens up a whole new world for the way we build pages, posts, and websites with WordPress. Block Lab makes it easy to harness Gutenberg and build custom blocks the way you want them to be built. Whether you want to implement a custom design, deliver unique functionality, or even remove your dependance on other plugins, Block Lab equips you with the tools you need to hit “Publish” sooner.
+Gutenberg, the new WordPress editor, opens up a whole new world for the way we build pages, posts, and websites with WordPress. Block Lab makes it easy to harness Gutenberg and build custom blocks the way you want them to be built. Whether you want to implement a custom design, deliver unique functionality, or even remove your dependence on other plugins, Block Lab equips you with the tools you need to hit “Publish” sooner.
 
 == Features ==
 
@@ -33,12 +33,12 @@ Simple to use functions, ready to render and work with the values stored through
 Join The Lab, our free Block Lab Community on Slack. The Lab is our real-time home for sharing resources, learning, and making connections. [Learn more.](https://getblocklab.com/welcome-to-the-lab/)
 
 = Go Pro =
-Block Lab Pro is coming mid 2019 with power features to take your block building to the next level. [Learn more.](https://getblocklab.com/block-lab-pro)
+Block Lab Pro is here, with powerful features to take your block building to the next level. [Learn more.](https://getblocklab.com/block-lab-pro)
 
 == Links ==
 * [WordPress.org](https://wordpress.org/plugins/block-lab)
 * [Github](https://github.com/getblocklab/block-lab)
-* [Documentation](https://github.com/getblocklab/block-lab/wiki)
+* [Documentation](https://getblocklab.com/docs)
 * [Support](https://wordpress.org/support/plugin/block-lab)
 * [Block Lab Pro](https://getblocklab.com/block-lab-pro)
 
@@ -51,26 +51,102 @@ Block Lab Pro is coming mid 2019 with power features to take your block building
 
 = Manually =
 * Clone Block Lab into a working directory with `https://github.com/getblocklab/block-lab.git`
-* `cd` into the `block-lab` directory, and run `npm install`
+* `cd` into the `block-lab` directory, and run `npm install && composer install`
 * Next, build the scripts and styles with `npm build`
 * Move the `block-lab` folder to your `/wp-content/plugins/` directory
 * Activate the Block Lab plugin through the Plugins menu in WordPress
 
 == Frequently Asked Questions =
 **Q: Do I need to write code to use this plugin?**
-A: Although the plugin handles the majority of the work in building a custom block, you will need to build HTML templates to display the content of the block. You can learn how in the the developer documentation.
+A: Although the plugin handles the majority of the work in building a custom block, you will need to build HTML templates to display the content of the block. You can learn how in the developer documentation.
 
 **Q: I have an idea for the plugin**
 A: This plugin is open source and can only be better through community contribution. The GitHub repo is [here](https://github.com/getblocklab/block-lab).
 
 **Q: Where can I find documentation for this plugin?**
-A: [Here](https://github.com/getblocklab/block-lab/wiki)
+A: [Here](https://getblocklab.com/docs/)
 
 == Contributing ==
 
 See [Contributing to Block Lab](https://github.com/getblocklab/block-lab/blob/develop/CONTRIBUTING.md).
 
 == Changelog ===
+
+= 1.5.3 – 2020-01-20 =
+
+Some UI improvements, bugfixes, and improved stability.
+
+* Fix: Improved import error feedback, and cleaner methods
+* Fix: Editor bug from `@wordpress/nux` package being deprecated
+* New: Improved stability, including JS tests and query limit
+* New: Pre-commit hook to lint only staged files
+
+= 1.5.2 – 2020-02-04 =
+
+Some small tweaks to the Block Importer and onboarding dialogs.
+
+* New: Selective import now allows you to choose which of the blocks contained in your export file you'd like to import
+* Fix: Onboarding notices are fixed so that they show in the right places, and at the right times
+
+= 1.5.1 – 2019-11-11 =
+
+This is a bugfix release, focused mostly on compatibility with WordPress 5.3.
+
+* Fix: Themes can now hook into the `block_lab_add_blocks` action from the `functions.php` file
+* Fix: Classic Text fields now function as expected when inside a repeater
+* Fix: Rare instances of a `NaN` error when duplicating fields
+* Fix: Style fixes for the Block Editor in WordPress 5.3
+
+= 1.5.0 – 2019-10-30 =
+
+Ready for a big release? We're really happy to be introducing quite a number of highly requested features, including a PHP API for registering blocks with code, a new text field with lists and headings, and some neat workflow efficiencies when building your block. 
+
+* New: There's now a PHP API for registering blocks using code (instead of the WP Admin UI). Documentation is [here](https://github.com/getblocklab/block-lab/pull/434) for now, but more on its way soon
+* New: Classic Text control (for Block Lab Pro users)! This field is similar to Rich Text, but has a few extra options for things like lists and headings
+* New: Duplicate fields – building your block is now so much easier, with the ability to duplicate rows
+* New: Repeater Row Count function – a helper function that returns the total amount of rows in a given repeater. Documentation [here](https://github.com/getblocklab/block-lab/pull/429)
+* New: Repeater Row Index function – a helper function that returns the current row, while looping through a repeater. Documentation [here](https://github.com/getblocklab/block-lab/pull/429)
+* Tweak: We've removed our dependency on global variables. This is mostly a best practice thing, not user facing. More details [here](https://github.com/getblocklab/block-lab/pull/435).
+* Tweak: We've refactored quite a lot about our block Loader class, to make it more robust, secure, and maintainable
+* Tweak: Loads of new unit and integration tests - these help prevent us from introducing bugs or regressions in the future
+* Fix: Bug which affected sites which had removed or renamed the admin user role
+* Fix: Empty Rich Text fields now no longer output a single `</p>` tag
+
+= 1.4.1 – 2019-09-11 =
+
+You can now add a Minimum and Maximum Rows setting to repeaters, allowing you to specify a lower and upper limit on how many repeater rows can be added.
+
+* New: The repeater field now includes a minimum and maximum row setting
+* Fix: Location and Width settings are now visible again when adding a new field
+* Fix: Using block_sub_field() with an image now correctly outputs the image URL instead of the ID
+
+= 1.4.0 – 2019-09-04 =
+
+This release applies some finishing touches to the repeater field. It also introduces a new "Field Width" feature, which lets you choose the width of the fields as seen in the Editor.
+
+* New: Function to reset repeater rows: reset_block_rows()
+* New: Add a "Field Width" control to blocks
+* Fix: Empty repeater rows now save and can be moved properly
+* Fix: An issue which occasionally prevented repeater rows from being deleted
+* Fix: Prevent repeated requests to validate a Pro license
+* Tweaks: Add a different admin notice for when a license validation request fails
+* Tweaks: Many new and shiny unit and integration tests, making Block Lab more solid than ever
+
+= 1.3.6 – 2019-08-22 =
+
+* New: 🔁 REPEATER FIELD 🔁
+* New: Conditional Blocks, based on Post Type
+* Tweaks: Just about everything! We did a lot of refactoring in this release to make things silky smooth and über-maintainable.
+
+= 1.3.5 – 2019-08-18 =
+
+* New: Block Lab will now enqueue a global stylesheet, so you can keep your common block styles in one place. [Read more](https://github.com/getblocklab/block-lab/pull/371)
+* New: Block templates can now be placed inside a sub-folder, for an even cleaner directory structure. [Read more](https://github.com/getblocklab/block-lab/pull/372)
+* Tweak: Use a textarea for specifying the default value of a textarea control.
+* Tweak: Better handling of deprecated functions.
+* Tweak: Rewrite of various functions, making developer access to common commands much simpler.
+* Fix: Child theme templates are now correctly loaded before their parent templates.
+* Fix: Autoslugs now continue to work properly after the title field loses focus.
 
 = 1.3.4 - 2019-07-22 =
 
@@ -100,7 +176,7 @@ See [Contributing to Block Lab](https://github.com/getblocklab/block-lab/blob/de
 
 = 1.3.1 - 2019-05-22 =
 
-* New: Support for Gutenberg's built-in Additional CSS Class in your block template, by using the field `className`. [Read more](https://github.com/getblocklab/block-lab/wiki/7.-FAQ)
+* New: Support for Gutenberg's built-in Additional CSS Class in your block template, by using the field `className`. [Read more](https://getblocklab.com/docs/faqs/)
 * New: The Textarea field now has an option to automatically add paragraph tags and line-breaks
 * Fix: Bug affecting blocks containing Pro fields when there's no active Pro license
 
@@ -132,7 +208,7 @@ If you are using the `block_value()` function with an image field and externally
 
 = 1.2.1 - 2019-03-21 =
 
-* New: Automatic stylesheet enqueuing. Now you can create custom stylesheets for individual blocks! [Read more here](https://github.com/getblocklab/block-lab/wiki/5.-Styling-Custom-Blocks).
+* New: Automatic stylesheet enqueuing. Now you can create custom stylesheets for individual blocks! [Read more here](https://getblocklab.com/docs/get-started/style-block-lab-custom-blocks/).
 * New: A User control type (for Block Lab Pro users)
 * Fix: Various multiselect bug fixes, allowing for empty values in the multiselect control
 

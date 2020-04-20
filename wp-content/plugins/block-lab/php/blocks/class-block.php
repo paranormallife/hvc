@@ -3,7 +3,7 @@
  * Block.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -29,6 +29,13 @@ class Block {
 	public $title = '';
 
 	/**
+	 * Exclude the block in these post types.
+	 *
+	 * @var array
+	 */
+	public $excluded = [];
+
+	/**
 	 * Icon.
 	 *
 	 * @var string
@@ -40,25 +47,25 @@ class Block {
 	 *
 	 * @var array
 	 */
-	public $category = array(
+	public $category = [
 		'slug'  => '',
 		'title' => '',
 		'icon'  => '',
-	);
+	];
 
 	/**
 	 * Block keywords.
 	 *
 	 * @var string[]
 	 */
-	public $keywords = array();
+	public $keywords = [];
 
 	/**
 	 * Block fields.
 	 *
 	 * @var Field[]
 	 */
-	public $fields = array();
+	public $fields = [];
 
 	/**
 	 * Block constructor.
@@ -117,6 +124,10 @@ class Block {
 			$this->title = $config['title'];
 		}
 
+		if ( isset( $config['excluded'] ) ) {
+			$this->excluded = $config['excluded'];
+		}
+
 		if ( isset( $config['icon'] ) ) {
 			$this->icon = $config['icon'];
 		}
@@ -147,16 +158,17 @@ class Block {
 	public function to_json() {
 		$config['name']     = $this->name;
 		$config['title']    = $this->title;
+		$config['excluded'] = $this->excluded;
 		$config['icon']     = $this->icon;
 		$config['category'] = $this->category;
 		$config['keywords'] = $this->keywords;
 
-		$config['fields'] = array();
+		$config['fields'] = [];
 		foreach ( $this->fields as $key => $field ) {
 			$config['fields'][ $key ] = $field->to_array();
 		}
 
-		return wp_json_encode( array( 'block-lab/' . $this->name => $config ), JSON_UNESCAPED_UNICODE );
+		return wp_json_encode( [ 'block-lab/' . $this->name => $config ], JSON_UNESCAPED_UNICODE );
 	}
 
 	/**
@@ -173,10 +185,10 @@ class Block {
 	 * @return array
 	 */
 	public function get_category_array_from_slug( $slug ) {
-		return array(
+		return [
 			'slug'  => $slug,
 			'title' => ucwords( $slug, '-' ),
 			'icon'  => null,
-		);
+		];
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Loader initiates the loading of new Gutenberg blocks for the Block_Lab plugin.
+ * Loader initiates the loading of new blocks.
  *
  * @package Block_Lab
  */
@@ -19,14 +19,23 @@ class Loader extends Component_Abstract {
 	 *
 	 * @var array
 	 */
-	public $assets = [];
+	protected $assets = [];
 
 	/**
-	 * JSON representing last loaded blocks.
+	 * An associative array of block config data for the blocks that will be registered.
 	 *
-	 * @var string
+	 * The key of each item in the array is the block name.
+	 *
+	 * @var array
 	 */
-	public $blocks = '';
+	protected $blocks = [];
+
+	/**
+	 * A data store for sharing data to helper functions.
+	 *
+	 * @var array
+	 */
+	protected $data = [];
 
 	/**
 	 * Load the Loader.
@@ -45,8 +54,6 @@ class Loader extends Component_Abstract {
 			],
 		];
 
-		$this->retrieve_blocks();
-
 		return $this;
 	}
 
@@ -57,36 +64,89 @@ class Loader extends Component_Abstract {
 		/**
 		 * Gutenberg JS block loading.
 		 */
-		add_action( 'enqueue_block_editor_assets', array( $this, 'editor_assets' ) );
+		add_action( 'enqueue_block_editor_assets', $this->get_callback( 'editor_assets' ) );
 
 		/**
 		 * Gutenberg custom categories.
 		 */
-		add_filter( 'block_categories', array( $this, 'register_categories' ) );
+		add_filter( 'block_categories', $this->get_callback( 'register_categories' ) );
+
+		/**
+		 * Block retrieval.
+		 */
+		add_action( 'init', $this->get_callback( 'retrieve_blocks' ), 1 );
 
 		/**
 		 * PHP block loading.
 		 */
-		add_action( 'plugins_loaded', array( $this, 'dynamic_block_loader' ) );
+		add_action( 'init', $this->get_callback( 'dynamic_block_loader' ) );
 	}
 
+	/**
+	 * Retrieve data from the Loader's data store.
+	 *
+	 * @param string $key The data key to retrieve.
+	 * @return mixed
+	 */
+	public function get_data( $key ) {
+		$data = false;
+
+		if ( isset( $this->data[ $key ] ) ) {
+			$data = $this->data[ $key ];
+		}
+
+		/**
+		 * Filters the data that gets returned.
+		 *
+		 * @param mixed  $data The data from the Loader's data store.
+		 * @param string $key  The key for the data being retreived.
+		 */
+		$data = apply_filters( 'block_lab_data', $data, $key );
+
+		/**
+		 * Filters the data that gets returned, specifically for a single key.
+		 *
+		 * @param mixed  $data The data from the Loader's data store.
+		 */
+		$data = apply_filters( "block_lab_data_{$key}", $data );
+
+		return $data;
+	}
+
+	/**
+	 * Gets the callback for an action or filter.
+	 *
+	 * Enables keeping these methods protected,
+	 * while allowing actions and filters to call them.
+	 *
+	 * @param string $method_name The name of the method to get the callback for.
+	 * @return callable An enclosure that calls the function.
+	 */
+	protected function get_callback( $method_name ) {
+		return function( $arg ) use ( $method_name ) {
+			return call_user_func( [ $this, $method_name ], $arg );
+		};
+	}
 
 	/**
 	 * Launch the blocks inside Gutenberg.
 	 */
-	public function editor_assets() {
+	protected function editor_assets() {
+		$asset_config_file = $this->plugin->get_path( 'js/editor.blocks.asset.php' );
+		$asset_config      = require $asset_config_file;
+
 		wp_enqueue_script(
 			'block-lab-blocks',
 			$this->assets['url']['entry'],
-			array( 'wp-i18n', 'wp-element', 'wp-blocks', 'wp-components', 'wp-api-fetch' ),
-			$this->plugin->get_version(),
+			$asset_config['dependencies'],
+			$asset_config['version'],
 			true
 		);
 
 		// Add dynamic Gutenberg blocks.
 		wp_add_inline_script(
 			'block-lab-blocks',
-			'const blockLabBlocks = ' . $this->blocks,
+			'const blockLabBlocks = ' . wp_json_encode( $this->blocks ),
 			'before'
 		);
 
@@ -94,43 +154,53 @@ class Loader extends Component_Abstract {
 		wp_enqueue_style(
 			'block-lab-editor-css',
 			$this->assets['url']['editor_style'],
-			array(),
+			[],
 			$this->plugin->get_version()
 		);
 
-		$blocks      = json_decode( $this->blocks, true );
-		$block_names = wp_list_pluck( $blocks, 'name' );
+		$block_names = wp_list_pluck( $this->blocks, 'name' );
 
 		foreach ( $block_names as $block_name ) {
-			$this->enqueue_block_styles( $block_name, array( 'preview', 'block' ) );
+			$this->enqueue_block_styles( $block_name, [ 'preview', 'block' ] );
 		}
+
+		$this->enqueue_global_styles();
 
 		// Used to conditionally show notices for blocks belonging to an author.
 		$author_blocks = get_posts(
-			array(
+			[
 				'author'         => get_current_user_id(),
 				'post_type'      => 'block_lab',
 				// We could use -1 here, but that could be dangerous. 99 is more than enough.
 				'posts_per_page' => 99,
-			)
+			]
 		);
 
 		$author_block_slugs = wp_list_pluck( $author_blocks, 'post_name' );
 
-		wp_localize_script( 'block-lab-blocks', 'blockLab', array( 'authorBlocks' => $author_block_slugs ) );
+		// Used to conditionally exclude blocks from certain post types.
+		$post      = get_post();
+		$post_type = $post->post_type;
+
+		wp_localize_script(
+			'block-lab-blocks',
+			'blockLab',
+			[
+				'authorBlocks' => $author_block_slugs,
+				'postType'     => $post_type,
+			]
+		);
 	}
 
 	/**
 	 * Loads dynamic blocks via render_callback for each block.
 	 */
-	public function dynamic_block_loader() {
+	protected function dynamic_block_loader() {
 		if ( ! function_exists( 'register_block_type' ) ) {
 			return;
 		}
 
-		$blocks = json_decode( $this->blocks, true );
-
-		foreach ( $blocks as $block_name => $block_config ) {
+		foreach ( $this->blocks as $block_name => $block_config ) {
 			$block = new Block();
 			$block->from_array( $block_config );
 			$this->register_block( $block_name, $block );
@@ -143,7 +213,7 @@ class Loader extends Component_Abstract {
 	 * @param string $block_name The name of the block, including namespace.
 	 * @param Block  $block      The block to register.
 	 */
-	public function register_block( $block_name, $block ) {
+	protected function register_block( $block_name, $block ) {
 		$attributes = $this->get_block_attributes( $block );
 
 		// sanitize_title() allows underscores, but register_block_type doesn't.
@@ -156,13 +226,13 @@ class Loader extends Component_Abstract {
 
 		register_block_type(
 			$block_name,
-			array(
+			[
 				'attributes'      => $attributes,
 				// @see https://github.com/WordPress/gutenberg/issues/4671
 				'render_callback' => function ( $attributes ) use ( $block ) {
 					return $this->render_block_template( $block, $attributes );
 				},
-			)
+			]
 		);
 	}
 
@@ -173,10 +243,8 @@ class Loader extends Component_Abstract {
 	 *
 	 * @return array
 	 */
-	public function register_categories( $categories ) {
-		$blocks = json_decode( $this->blocks, true );
-
-		foreach ( $blocks as $block_config ) {
+	protected function register_categories( $categories ) {
+		foreach ( $this->blocks as $block_config ) {
 			if ( ! isset( $block_config['category'] ) ) {
 				continue;
 			}
@@ -206,30 +274,14 @@ class Loader extends Component_Abstract {
 	 *
 	 * @return array
 	 */
-	public function get_block_attributes( $block ) {
+	protected function get_block_attributes( $block ) {
 		$attributes = [];
 
 		// Default Editor attributes (applied to all blocks).
-		$attributes['className'] = array( 'type' => 'string' );
+		$attributes['className'] = [ 'type' => 'string' ];
 
 		foreach ( $block->fields as $field_name => $field ) {
-			$attributes[ $field_name ] = array(
-				'type' => $field->type,
-			);
-
-			if ( ! empty( $field->settings['default'] ) ) {
-				$attributes[ $field_name ]['default'] = $field->settings['default'];
-			}
-
-			if ( 'array' === $field->type ) {
-				/**
-				 * This is a workaround to allow empty array values. We unset the default value before registering the
-				 * block so that the default isn't used to auto-correct empty arrays. This allows the default to be
-				 * used only when creating the form.
-				 */
-				unset( $attributes[ $field_name ]['default'] );
-				$attributes[ $field_name ]['items'] = array( 'type' => 'string' );
-			}
+			$attributes = $this->get_attributes_from_field( $attributes, $field_name, $field );
 		}
 
 		/**
@@ -245,23 +297,52 @@ class Loader extends Component_Abstract {
 	}
 
 	/**
+	 * Sets the field values in the attributes, enabling them to appear in the block.
+	 *
+	 * @param array  $attributes The attributes in which to store the field value.
+	 * @param string $field_name The name of the field, like 'home-hero'.
+	 * @param Field  $field      The Field to set the attributes from.
+	 * @return array $attributes The attributes, with the new field value set.
+	 */
+	protected function get_attributes_from_field( $attributes, $field_name, $field ) {
+		$attributes[ $field_name ] = [
+			'type' => $field->type,
+		];
+
+		if ( ! empty( $field->settings['default'] ) ) {
+			$attributes[ $field_name ]['default'] = $field->settings['default'];
+		}
+
+		if ( 'array' === $field->type ) {
+			/**
+			 * This is a workaround to allow empty array values. We unset the default value before registering the
+			 * block so that the default isn't used to auto-correct empty arrays. This allows the default to be
+			 * used only when creating the form.
+			 */
+			unset( $attributes[ $field_name ]['default'] );
+			$items_type                         = 'repeater' === $field->control ? 'object' : 'string';
+			$attributes[ $field_name ]['items'] = [ 'type' => $items_type ];
+		}
+
+		return $attributes;
+	}
+
+	/**
 	 * Renders the block provided a template is provided.
 	 *
-	 * @param array $block      The block to render.
+	 * @param Block $block The block to render.
 	 * @param array $attributes Attributes to render.
 	 *
 	 * @return mixed
 	 */
-	public function render_block_template( $block, $attributes ) {
-		global $block_lab_attributes, $block_lab_config;
-
+	protected function render_block_template( $block, $attributes ) {
 		$type = 'block';
 
 		// This is hacky, but the editor doesn't send the original request along.
 		$context = filter_input( INPUT_GET, 'context', FILTER_SANITIZE_STRING );
 
 		if ( 'edit' === $context ) {
-			$type = array( 'preview', 'block' );
+			$type = [ 'preview', 'block' ];
 		}
 
 		if ( ! is_admin() ) {
@@ -276,11 +357,36 @@ class Loader extends Component_Abstract {
 				}
 			}
 
+			// Similar to the logic above, populate the Repeater control's sub-fields with default values.
+			foreach ( $block->fields as $field ) {
+				if ( isset( $field->settings['sub_fields'] ) && isset( $attributes[ $field->name ]['rows'] ) ) {
+					$sub_field_settings = $field->settings['sub_fields'];
+					$rows               = $attributes[ $field->name ]['rows'];
+
+					// In each row, apply a field's default value if a value doesn't exist in the attributes.
+					foreach ( $rows as $row_index => $row ) {
+						foreach ( $sub_field_settings as $sub_field_name => $sub_field ) {
+							if ( ! isset( $row[ $sub_field_name ] ) && isset( $sub_field_settings[ $sub_field_name ]->settings['default'] ) ) {
+								$rows[ $row_index ][ $sub_field_name ] = $sub_field_settings[ $sub_field_name ]->settings['default'];
+							}
+						}
+					}
+
+					$attributes[ $field->name ]['rows'] = $rows;
+				}
+			}
+
 			$this->enqueue_block_styles( $block->name, 'block' );
+
+			/**
+			 * The wp_enqueue_style function handles duplicates, so we don't need to worry about multiple blocks
+			 * loading the global styles more than once.
+			 */
+			$this->enqueue_global_styles();
 		}
 
-		$block_lab_attributes = $attributes;
-		$block_lab_config     = $block;
+		$this->data['attributes'] = $attributes;
+		$this->data['config']     = $block;
 
 		if ( ! is_admin() && ( ! defined( 'REST_REQUEST' ) || ! REST_REQUEST ) && ! wp_doing_ajax() ) {
 
@@ -321,22 +427,19 @@ class Loader extends Component_Abstract {
 	 * @param string       $name The name of the block (slug as defined in UI).
 	 * @param string|array $type The type of template to load.
 	 */
-	public function enqueue_block_styles( $name, $type = 'block' ) {
-		$locations = array();
+	protected function enqueue_block_styles( $name, $type = 'block' ) {
+		$locations = [];
 		$types     = (array) $type;
 
 		foreach ( $types as $type ) {
 			$locations = array_merge(
 				$locations,
-				array(
-					"blocks/css/{$type}-{$name}.css",
-					"blocks/{$type}-{$name}.css",
-				)
+				block_lab()->get_stylesheet_locations( $name, $type )
 			);
 		}
 
-		$stylesheet_path = block_lab_locate_template( $locations );
-		$stylesheet_url  = str_replace( untrailingslashit( ABSPATH ), '', $stylesheet_path );
+		$stylesheet_path = block_lab()->locate_template( $locations );
+		$stylesheet_url  = block_lab()->get_url_from_path( $stylesheet_path );
 
 		/**
 		 * Enqueue the stylesheet, if it exists. The wp_enqueue_style function handles duplicates, so we don't need
@@ -346,7 +449,32 @@ class Loader extends Component_Abstract {
 			wp_enqueue_style(
 				"block-lab__block-{$name}",
 				$stylesheet_url,
-				array(),
+				[],
+				wp_get_theme()->get( 'Version' )
+			);
+		}
+	}
+
+	/**
+	 * Enqueues global block styles.
+	 */
+	protected function enqueue_global_styles() {
+		$locations = [
+			'blocks/css/blocks.css',
+			'blocks/blocks.css',
+		];
+
+		$stylesheet_path = block_lab()->locate_template( $locations );
+		$stylesheet_url  = block_lab()->get_url_from_path( $stylesheet_path );
+
+		/**
+		 * Enqueue the stylesheet, if it exists.
+		 */
+		if ( ! empty( $stylesheet_url ) ) {
+			wp_enqueue_style(
+				'block-lab__global-styles',
+				$stylesheet_url,
+				[],
 				wp_get_theme()->get( 'Version' )
 			);
 		}
@@ -358,7 +486,7 @@ class Loader extends Component_Abstract {
 	 * @param string       $name The name of the block (slug as defined in UI).
 	 * @param string|array $type The type of template to load.
 	 */
-	public function block_template( $name, $type = 'block' ) {
+	protected function block_template( $name, $type = 'block' ) {
 		// Loading async it might not come from a query, this breaks load_template().
 		global $wp_query;
 
@@ -367,24 +495,16 @@ class Loader extends Component_Abstract {
 			$wp_query = new \WP_Query(); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
-		$types         = (array) $type;
-		$located       = '';
-		$template_file = '';
+		$types   = (array) $type;
+		$located = '';
 
 		foreach ( $types as $type ) {
+			$templates = block_lab()->get_template_locations( $name, $type );
+			$located   = block_lab()->locate_template( $templates );
 
 			if ( ! empty( $located ) ) {
-				continue;
+				break;
 			}
-
-			$template_file = "blocks/{$type}-{$name}.php";
-			$generic_file  = "blocks/{$type}.php";
-			$templates     = [
-				$generic_file,
-				$template_file,
-			];
-
-			$located = block_lab_locate_template( $templates );
 		}
 
 		if ( ! empty( $located ) ) {
@@ -393,14 +513,18 @@ class Loader extends Component_Abstract {
 			// This is not a load once template, so require_once is false.
 			load_template( $theme_template, false );
 		} else {
-			if ( ! current_user_can( 'edit_posts' ) ) {
+			if ( ! current_user_can( 'edit_posts' ) || ! isset( $templates[0] ) ) {
+				return;
+			}
+			// Hide the template not found notice on the frontend, unless WP_DEBUG is enabled.
+			if ( ! is_admin() && ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
 				return;
 			}
 			printf(
 				'<div class="notice notice-warning">%s</div>',
 				wp_kses_post(
 					// Translators: Placeholder is a file path.
-					sprintf( __( 'Template file %s not found.' ), '<code>' . esc_html( $template_file ) . '</code>' )
+					sprintf( __( 'Template file %s not found.', 'block-lab' ), '<code>' . esc_html( $templates[0] ) . '</code>' )
 				)
 			);
 		}
@@ -409,15 +533,12 @@ class Loader extends Component_Abstract {
 	/**
 	 * Load all the published blocks and blocks/block.json files.
 	 */
-	public function retrieve_blocks() {
-		$slug = 'block_lab';
-
-		$this->blocks = '';
-		$blocks       = [];
-
-		// Retrieve blocks from blocks.json.
-		// Reverse to preserve order of preference when using array_merge.
-		$blocks_files = array_reverse( (array) block_lab_locate_template( 'blocks/blocks.json', '', false ) );
+	protected function retrieve_blocks() {
+		/**
+		 * Retrieve blocks from blocks.json.
+		 * Reverse to preserve order of preference when using array_merge.
+		 */
+		$blocks_files = array_reverse( (array) block_lab()->locate_template( 'blocks/blocks.json', '', false ) );
 		foreach ( $blocks_files as $blocks_file ) {
 			// This is expected to be on the local filesystem, so file_get_contents() is ok to use here.
 			$json       = file_get_contents( $blocks_file ); // @codingStandardsIgnoreLine
@@ -425,15 +546,18 @@ class Loader extends Component_Abstract {
 
 			// Merge if no json_decode error occurred.
 			if ( json_last_error() == JSON_ERROR_NONE ) { // phpcs:ignore WordPress.PHP.StrictComparisons.LooseComparison
-				$blocks = array_merge( $blocks, $block_data );
+				$this->blocks = array_merge( $this->blocks, $block_data );
 			}
 		}
 
+		/**
+		 * Retrieve blocks stored as posts in the WordPress database.
+		 */
 		$block_posts = new \WP_Query(
 			[
-				'post_type'      => $slug,
+				'post_type'      => block_lab()->get_post_type_slug(),
 				'post_status'    => 'publish',
-				'posts_per_page' => - 1,
+				'posts_per_page' => 100, // This has to have a limit for this plugin to be scalable.
 			]
 		);
 
@@ -444,11 +568,60 @@ class Loader extends Component_Abstract {
 
 				// Merge if no json_decode error occurred.
 				if ( json_last_error() == JSON_ERROR_NONE ) { // phpcs:ignore WordPress.PHP.StrictComparisons.LooseComparison
-					$blocks = array_merge( $blocks, $block_data );
+					$this->blocks = array_merge( $this->blocks, $block_data );
 				}
 			}
 		}
 
-		$this->blocks = wp_json_encode( $blocks );
+		/**
+		 * Use this action to add new blocks and fields with the block_lab_add_block and block_lab_add_field helper functions.
+		 */
+		do_action( 'block_lab_add_blocks' );
+
+		/**
+		 * Filter the available blocks.
+		 *
+		 * This is used internally by the block_lab_add_block and block_lab_add_field helper functions,
+		 * but it can also be used to hide certain blocks if desired.
+		 *
+		 * @param array $blocks An associative array of blocks.
+		 */
+		$this->blocks = apply_filters( 'block_lab_blocks', $this->blocks );
+	}
+
+	/**
+	 * Add a new block.
+	 *
+	 * This method should be called during the block_lab_add_blocks action, to ensure
+	 * that the block isn't added too late.
+	 *
+	 * @param array $block_config The config of the block to add.
+	 */
+	public function add_block( $block_config ) {
+		if ( ! isset( $block_config['name'] ) ) {
+			return;
+		}
+
+		$this->blocks[ "block-lab/{$block_config['name']}" ] = $block_config;
+	}
+
+	/**
+	 * Add a new field to an existing block.
+	 *
+	 * This method should be called during the block_lab_add_blocks action, to ensure
+	 * that the block isn't added too late.
+	 *
+	 * @param string $block_name   The name of the block that the field is added to.
+	 * @param array  $field_config The config of the field to add.
+	 */
+	public function add_field( $block_name, $field_config ) {
+		if ( ! isset( $this->blocks[ "block-lab/{$block_name}" ] ) ) {
+			return;
+		}
+		if ( ! isset( $field_config['name'] ) ) {
+			return;
+		}
+
+		$this->blocks[ "block-lab/{$block_name}" ]['fields'][ $field_config['name'] ] = $field_config;
 	}
 }

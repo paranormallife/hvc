@@ -3,7 +3,7 @@
  * Control abstract.
  *
  * @package   Block_Lab
- * @copyright Copyright(c) 2018, Block Lab
+ * @copyright Copyright(c) 2020, Block Lab
  * @license http://opensource.org/licenses/GPL-2.0 GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -31,7 +31,7 @@ abstract class Control_Abstract {
 	public $label = '';
 
 	/**
-	 * Field variable type.
+	 * Field variable type (passed as an attribute when registering the block in Javascript).
 	 *
 	 * @var string
 	 */
@@ -42,7 +42,7 @@ abstract class Control_Abstract {
 	 *
 	 * @var Control_Setting[]
 	 */
-	public $settings = array();
+	public $settings = [];
 
 	/**
 	 * Configurations for common settings, like 'help' and 'placeholder'.
@@ -54,14 +54,14 @@ abstract class Control_Abstract {
 	 *     @type array  $setting_config The default configuration of the setting.
 	 * }
 	 */
-	public $settings_config = array();
+	public $settings_config = [];
 
 	/**
 	 * The possible editor locations, either in the main block editor, or the inspector controls.
 	 *
 	 * @var array
 	 */
-	public $locations = array();
+	public $locations = [];
 
 	/**
 	 * Control constructor.
@@ -82,41 +82,48 @@ abstract class Control_Abstract {
 	 * @return void
 	 */
 	public function create_settings_config() {
-		$this->settings_config = array(
-			'location'    => array(
+		$this->settings_config = [
+			'location'    => [
 				'name'     => 'location',
-				'label'    => __( 'Location', 'block-lab' ),
+				'label'    => __( 'Field Location', 'block-lab' ),
 				'type'     => 'location',
 				'default'  => 'editor',
-				'sanitize' => array( $this, 'sanitize_location' ),
-			),
-			'help'        => array(
+				'sanitize' => [ $this, 'sanitize_location' ],
+			],
+			'width'       => [
+				'name'     => 'width',
+				'label'    => __( 'Field Width', 'block-lab' ),
+				'type'     => 'width',
+				'default'  => '100',
+				'sanitize' => 'sanitize_text_field',
+			],
+			'help'        => [
 				'name'     => 'help',
 				'label'    => __( 'Help Text', 'block-lab' ),
 				'type'     => 'text',
 				'default'  => '',
 				'sanitize' => 'sanitize_text_field',
-			),
-			'default'     => array(
+			],
+			'default'     => [
 				'name'     => 'default',
 				'label'    => __( 'Default Value', 'block-lab' ),
 				'type'     => 'text',
 				'default'  => '',
 				'sanitize' => 'sanitize_text_field',
-			),
-			'placeholder' => array(
+			],
+			'placeholder' => [
 				'name'     => 'placeholder',
 				'label'    => __( 'Placeholder Text', 'block-lab' ),
 				'type'     => 'text',
 				'default'  => '',
 				'sanitize' => 'sanitize_text_field',
-			),
-		);
+			],
+		];
 
-		$this->locations = array(
+		$this->locations = [
 			'editor'    => __( 'Editor', 'block-lab' ),
 			'inspector' => __( 'Inspector', 'block-lab' ),
-		);
+		];
 	}
 
 	/**
@@ -136,21 +143,33 @@ abstract class Control_Abstract {
 	 */
 	public function render_settings( $field, $uid ) {
 		foreach ( $this->settings as $setting ) {
+			// Don't render the location setting for sub-fields.
+			if ( 'location' === $setting->type && isset( $field->settings['parent'] ) ) {
+				continue;
+			}
+
+			// Don't render the field width setting for sub-fields.
+			if ( 'width' === $setting->type && isset( $field->settings['parent'] ) ) {
+				continue;
+			}
+
 			if ( isset( $field->settings[ $setting->name ] ) ) {
 				$setting->value = $field->settings[ $setting->name ];
 			} else {
 				$setting->value = $setting->default;
 			}
 
-			$classes = array(
-				'block-fields-edit-settings-' . $this->name . '-' . $setting->name,
-				'block-fields-edit-settings-' . $this->name,
+			$classes = [
+				"block-fields-edit-settings-{$this->name}-{$setting->name}",
+				"block-fields-edit-{$setting->name}-settings",
+				"block-fields-edit-settings-{$this->name}",
+				"block-fields-edit-{$setting->name}-settings",
 				'block-fields-edit-settings',
-			);
+			];
 			$name    = 'block-fields-settings[' . $uid . '][' . $setting->name . ']';
 			$id      = 'block-fields-edit-settings-' . $this->name . '-' . $setting->name . '_' . $uid;
 			?>
-			<tr class="<?php echo esc_attr( implode( $classes, ' ' ) ); ?>">
+			<tr class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 				<td class="spacer"></td>
 				<th scope="row">
 					<label for="<?php echo esc_attr( $id ); ?>">
@@ -331,6 +350,42 @@ abstract class Control_Abstract {
 	}
 
 	/**
+	 * Renders a button group of field widths.
+	 *
+	 * @param Control_Setting $setting The Control_Setting being rendered.
+	 * @param string          $name    The name attribute of the option.
+	 * @param string          $id      The id attribute of the option.
+	 *
+	 * @return void
+	 */
+	public function render_settings_width( $setting, $name, $id ) {
+		$widths = [
+			'25'  => '25%',
+			'50'  => '50%',
+			'75'  => '75%',
+			'100' => '100%',
+		];
+		?>
+		<div class="button-group">
+		<?php
+		foreach ( $widths as $value => $label ) {
+			?>
+			<input
+				class="button"
+				name="<?php echo esc_attr( $name ); ?>"
+				type="radio"
+				value="<?php echo esc_attr( $value ); ?>"
+				<?php checked( $value, $setting->get_value() ); ?>
+				/>
+			<label><?php echo esc_html( $label ); ?></label>
+			<?php
+		}
+		?>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Renders a <select> of the passed values.
 	 *
 	 * @param Control_Setting $setting The Control_Setting being rendered.
@@ -396,7 +451,7 @@ abstract class Control_Abstract {
 	 */
 	public function sanitize_textarea_assoc_array( $value ) {
 		$rows    = preg_split( '/\r\n|[\r\n]/', $value );
-		$options = array();
+		$options = [];
 
 		foreach ( $rows as $key => $option ) {
 			if ( '' === $option ) {
@@ -429,7 +484,7 @@ abstract class Control_Abstract {
 	 */
 	public function sanitize_textarea_array( $value ) {
 		$rows    = preg_split( '/\r\n|[\r\n]/', $value );
-		$options = array();
+		$options = [];
 
 		foreach ( $rows as $key => $option ) {
 			if ( '' === $option ) {
@@ -483,7 +538,7 @@ abstract class Control_Abstract {
 			return $value;
 		}
 
-		$options = array();
+		$options = [];
 
 		// Reindex the options into a more workable format.
 		array_walk(
